@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "danta"
+version = "0.1.0"
+description = "Exact business intent in, verified software out: specs to flowcharts to tested full-stack projects."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.scripts]
+danta = "danta.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["danta*"]
+
+[tool.setuptools.package-data]
+danta = ["spec/*.md", "spec/examples/*.md", "app/static/*", "examples/*.json", "gen/catalogs/*.json"]
