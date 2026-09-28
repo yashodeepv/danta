@@ -1,0 +1,1347 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Danta Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=JetBrains+Mono:wght@400;500&display=swap">
+<script>
+  // the saved theme is applied before the page paints, so it never flashes the other one
+  try { const t = localStorage.getItem('danta-theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<style>
+/* Danta Spec Studio. Tokens first: light on :root, dark under [data-theme="dark"] or the system setting. */
+:root {
+  color-scheme: light;
+  --paper: #f6f4ef; --surface: #fffdf9; --sunk: #f1eee7; --raised: #ffffff;
+  --ink: #1f1c18; --muted: #6b645a; --faint: #9a9185; --line: #e4ded3; --line-strong: #d3cbbd;
+  --dot: #ddd6c9; --accent: #c2410c; --accent-ink: #ffffff; --accent-soft: #fbe9df; --hl: #fde7a7;
+  --ok: #1f7a4d; --ok-soft: #e1f2e8; --err: #b42318; --err-soft: #fbe6e3; --warn: #9a5b06; --warn-soft: #fbefd9;
+  --trigger: #4f5bd5; --call: #2c78b8; --compute: #7c4dc4; --validate: #9a5b06; --branch: #be185d;
+  --flowk: #6b645a; --persist: #1f7a4d; --notify: #0f7c83;
+  --tint: 7%;
+  --shadow: 0 1px 2px rgb(40 30 10 / 5%), 0 4px 16px rgb(40 30 10 / 5%);
+  --radius: 12px;
+  --sans: "DM Sans", "Inter", -apple-system, system-ui, sans-serif;
+  --display: "Bricolage Grotesque", "DM Sans", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #121110; --surface: #1a1917; --sunk: #151413; --raised: #22201d;
+  --ink: #ece7df; --muted: #a39b8f; --faint: #7a7368; --line: #2c2a26; --line-strong: #3a3732;
+  --dot: #2a2824; --accent: #f59e0b; --accent-ink: #1a1206; --accent-soft: #3a2a10; --hl: #5a4312;
+  --ok: #5cc48a; --ok-soft: #16301f; --err: #f2766b; --err-soft: #3a1b18; --warn: #e0a546; --warn-soft: #362810;
+  --trigger: #8f98f2; --call: #6aaee6; --compute: #b393ee; --validate: #e0a546; --branch: #f472b6;
+  --flowk: #a39b8f; --persist: #5cc48a; --notify: #4cc3c9;
+  --tint: 12%;
+  --shadow: 0 1px 2px rgb(0 0 0 / 30%), 0 6px 20px rgb(0 0 0 / 25%);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --paper: #121110; --surface: #1a1917; --sunk: #151413; --raised: #22201d;
+    --ink: #ece7df; --muted: #a39b8f; --faint: #7a7368; --line: #2c2a26; --line-strong: #3a3732;
+    --dot: #2a2824; --accent: #f59e0b; --accent-ink: #1a1206; --accent-soft: #3a2a10; --hl: #5a4312;
+    --ok: #5cc48a; --ok-soft: #16301f; --err: #f2766b; --err-soft: #3a1b18; --warn: #e0a546; --warn-soft: #362810;
+    --trigger: #8f98f2; --call: #6aaee6; --compute: #b393ee; --validate: #e0a546; --branch: #f472b6;
+    --flowk: #a39b8f; --persist: #5cc48a; --notify: #4cc3c9;
+    --tint: 12%;
+    --shadow: 0 1px 2px rgb(0 0 0 / 30%), 0 6px 20px rgb(0 0 0 / 25%);
+  }
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 14px/1.55 var(--sans);
+  -webkit-font-smoothing: antialiased; transition: background .2s, color .2s; }
+button { font: inherit; color: inherit; }
+code { font: .92em var(--mono); background: var(--sunk); padding: 1px 5px; border-radius: 4px; }
+button:focus-visible, textarea:focus-visible, select:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- header */
+header { position: sticky; top: 0; z-index: 10; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 28px;
+  padding: 12px 24px; background: color-mix(in srgb, var(--surface) 88%, transparent); backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line); }
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand svg { width: 30px; height: 30px; flex-shrink: 0; }
+.brand .word { font-size: 20px; font-weight: 700; letter-spacing: -.02em; line-height: 1; }
+.brand .sub { display: block; font-size: 11px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-top: 3px; }
+.steps { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted); margin-left: auto; }
+.steps span { display: inline-flex; align-items: center; gap: 7px; }
+.steps b { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; font-size: 11px;
+  background: var(--accent-soft); color: var(--accent); }
+.steps i { width: 18px; height: 1px; background: var(--line-strong); }
+.theme { display: inline-flex; padding: 3px; gap: 2px; border: 1px solid var(--line); border-radius: 999px; background: var(--sunk); }
+.theme button { display: grid; place-items: center; width: 30px; height: 26px; border: 0; border-radius: 999px; background: none;
+  color: var(--muted); cursor: pointer; }
+.theme button svg { width: 15px; height: 15px; }
+.theme button[aria-pressed="true"] { background: var(--raised); color: var(--ink); box-shadow: var(--shadow); }
+
+/* ---------- layout */
+main { display: grid; grid-template-columns: minmax(380px, 540px) minmax(0, 1fr); gap: 20px; padding: 20px 24px 32px; }
+@media (max-width: 1040px) { main { grid-template-columns: 1fr; } }
+.col { display: grid; gap: 20px; align-content: start; min-width: 0; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px;
+  min-width: 0; box-shadow: var(--shadow); }
+.card h2 { margin: 0 0 4px; font-size: 15px; font-weight: 650; letter-spacing: -.01em; display: flex; align-items: center; gap: 10px; }
+.card h2 .n { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%;
+  background: var(--accent); color: var(--accent-ink); font-size: 12px; }
+.card p { margin: 0 0 14px; color: var(--muted); max-width: 62ch; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.spacer { flex: 1; }
+.btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line-strong); background: var(--raised);
+  border-radius: 8px; padding: 7px 14px; cursor: pointer; font-weight: 500; transition: border-color .15s, background .15s; }
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.btn.primary:hover { filter: brightness(1.06); }
+.btn.primary:disabled { opacity: .6; cursor: progress; }
+.hint { font-size: 12px; color: var(--muted); }
+kbd { font: 11px var(--mono); padding: 1px 5px; border: 1px solid var(--line-strong); border-bottom-width: 2px; border-radius: 4px; color: var(--muted); }
+select.btn { padding: 7px 10px; }
+
+.prompt-box { width: 100%; height: 200px; margin-top: 12px; font: 12px/1.5 var(--mono); color: var(--ink);
+  background: var(--sunk); border: 1px solid var(--line); border-radius: 8px; padding: 10px; resize: vertical; }
+
+.editor { position: relative; display: grid; grid-template-columns: auto 1fr; border: 1px solid var(--line);
+  border-radius: 10px; background: var(--sunk); height: calc(100vh - 360px); min-height: 320px; overflow: hidden; }
+.editor:focus-within { border-color: var(--accent); }
+.gutter { margin: 0; padding: 12px 10px 12px 12px; font: 12.5px/1.65 var(--mono); color: var(--faint); text-align: right;
+  user-select: none; overflow: hidden; border-right: 1px solid var(--line); min-width: 46px; }
+.gutter .bad { color: var(--err); font-weight: 700; }
+.editor textarea { margin: 0; border: 0; resize: none; padding: 12px; font: 12.5px/1.65 var(--mono); color: var(--ink);
+  background: transparent; white-space: pre; overflow: auto; tab-size: 3; }
+.editor textarea:focus { outline: none; }
+
+.issues { display: grid; gap: 6px; margin-top: 12px; max-height: 220px; overflow: auto; }
+.issue { display: grid; grid-template-columns: auto auto 1fr; gap: 10px; align-items: baseline; text-align: left;
+  padding: 8px 10px; border-radius: 8px; border: 1px solid transparent; background: var(--err-soft); cursor: pointer; font-size: 13px; }
+.issue:hover { border-color: var(--line-strong); }
+.issue.warning { background: var(--warn-soft); }
+.issue.intent { background: var(--accent-soft); }
+.issue .ln { font: 12px var(--mono); color: var(--muted); }
+.issue .rule { font: 11px var(--mono); padding: 1px 7px; border-radius: 999px; background: var(--surface); color: var(--err); }
+.issue.warning .rule { color: var(--warn); }
+.issue.intent .rule { color: var(--accent); }
+
+/* ---------- results */
+.summary { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.summary .sys { font-weight: 700; font-size: 20px; letter-spacing: -.02em; margin-right: 8px; }
+.chip { font: 12px var(--mono); padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line); background: var(--sunk); color: var(--muted); }
+.chip.ok { color: var(--ok); background: var(--ok-soft); border-color: transparent; }
+.chip.err { color: var(--err); background: var(--err-soft); border-color: transparent; }
+.chip.warn { color: var(--warn); background: var(--warn-soft); border-color: transparent; }
+.desc { color: var(--muted); margin: 10px 0 0; max-width: 90ch; }
+.desc b { color: var(--ink); font-weight: 600; }
+
+.tabs { display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 4px; margin: 16px 0 0; border-radius: 10px;
+  background: var(--sunk); border: 1px solid var(--line); }
+.tab { border: 0; background: none; padding: 6px 14px; cursor: pointer; color: var(--muted); border-radius: 7px; font-weight: 500; }
+.tab:hover { color: var(--ink); }
+.tab[aria-selected="true"] { color: var(--ink); background: var(--raised); box-shadow: var(--shadow); font-weight: 600; }
+.tab .badge { font: 11px var(--mono); margin-left: 5px; color: var(--accent); }
+.pane { padding-top: 16px; }
+.blocked { padding: 12px 14px; border-radius: 8px; background: var(--warn-soft); color: var(--ink); margin-bottom: 12px; }
+
+.canvas { position: relative; overflow: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--sunk);
+  background-image: radial-gradient(var(--dot) 1px, transparent 1px); background-size: 18px 18px; max-height: 70vh; }
+.stage { position: relative; margin: 0 auto; }
+.stage svg { position: absolute; inset: 0; overflow: visible; pointer-events: none; }
+.edge { fill: none; stroke: var(--line-strong); stroke-width: 1.6; }
+.edge.on-error { stroke: color-mix(in srgb, var(--err) 55%, var(--line)); stroke-dasharray: 5 4; }
+.edge.taken { stroke: var(--accent); stroke-width: 2.4; stroke-dasharray: none; }
+.arrow { fill: var(--line-strong); } .arrow.taken { fill: var(--accent); }
+.elabel { position: absolute; transform: translate(-50%, -50%); font: 10px var(--mono); padding: 2px 6px; border-radius: 999px;
+  background: var(--surface); border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.elabel.error { color: var(--err); }
+.elabel.taken { color: var(--accent); border-color: var(--accent); }
+.node { position: absolute; width: 196px; border: 1.5px solid var(--k); border-radius: 8px; padding: 7px 10px 8px; cursor: pointer;
+  text-align: left; background: color-mix(in srgb, var(--k) var(--tint), var(--surface)); box-shadow: var(--shadow); transition: transform .12s; }
+.node:hover { transform: translateY(-1px); }
+.node .k { display: block; font: 10px var(--mono); letter-spacing: .05em; text-transform: uppercase; color: var(--k); margin-bottom: 3px; }
+.node .l { display: block; font-size: 13px; font-weight: 600; line-height: 1.3; overflow-wrap: anywhere; }
+.node.trigger, .node.end { border-radius: 18px; }
+.node.branch { border-left-width: 5px; }
+.node.parallel, .node.join { border-style: dashed; }
+.node.visited { outline: 2px solid var(--accent); outline-offset: 1px; }
+.node.dim { opacity: .42; }
+.node.sel { box-shadow: 0 0 0 4px var(--hl); }
+
+.detail { margin-top: 14px; }
+.detail .title { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; margin-bottom: 8px; }
+.detail .title strong { font-size: 15px; }
+.link { border: 0; background: none; color: var(--accent); cursor: pointer; padding: 0; font: 12px var(--mono); }
+table.logic { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.logic th { text-align: left; font: 10px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted);
+  padding: 0 8px 6px 0; border-bottom: 1px solid var(--line); }
+table.logic td { padding: 7px 8px 7px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.logic td.f { font: 12px var(--mono); color: var(--muted); white-space: nowrap; }
+table.logic code { font: 12px/1.45 var(--mono); overflow-wrap: anywhere; background: none; padding: 0; }
+.scroll-x { overflow-x: auto; }
+
+.runs { display: grid; gap: 6px; }
+.run { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; text-align: left; cursor: pointer;
+  border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; background: var(--raised); }
+.run:hover { border-color: var(--line-strong); }
+.run[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.run .n { font: 12px var(--mono); }
+.run .p { color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pill { font: 11px var(--mono); padding: 2px 9px; border-radius: 999px; }
+.pill.ok { color: var(--ok); background: var(--ok-soft); } .pill.error { color: var(--err); background: var(--err-soft); }
+.kv { display: grid; grid-template-columns: 90px 1fr; gap: 6px 12px; margin-top: 14px; font-size: 13px; }
+.kv dt { color: var(--muted); font: 12px var(--mono); padding-top: 2px; }
+.kv dd { margin: 0; font: 12px/1.5 var(--mono); overflow-wrap: anywhere; }
+.kv ul { margin: 0; padding-left: 16px; }
+
+.verdict { padding: 10px 14px; border-radius: 8px; margin-bottom: 12px; font-size: 13px; }
+.verdict.verified { background: var(--ok-soft); } .verdict.mismatch { background: var(--err-soft); }
+.verdict.notverified { background: var(--warn-soft); }
+pre.code { margin: 0; padding: 14px; background: var(--sunk); border: 1px solid var(--line); border-radius: 10px;
+  font: 12px/1.55 var(--mono); overflow: auto; max-height: 64vh; tab-size: 4; }
+.empty { color: var(--muted); padding: 32px 4px; }
+.proj { display: grid; grid-template-columns: minmax(180px, 260px) minmax(0, 1fr); gap: 12px; align-items: start; }
+@media (max-width: 720px) { .proj { grid-template-columns: 1fr; } }
+
+/* screens preview: a small browser window showing the generated app */
+.shot { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface); box-shadow: var(--shadow); }
+.shot-bar { display: flex; align-items: center; gap: 6px; padding: 9px 12px; background: var(--sunk); border-bottom: 1px solid var(--line);
+  font: 12px var(--mono); color: var(--muted); }
+.shot-bar i { width: 10px; height: 10px; border-radius: 50%; background: var(--line-strong); display: inline-block; }
+.shot-bar span { margin-left: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 2px 10px; }
+.shot-app { display: flex; min-height: 340px; }
+.shot-nav { width: 170px; flex-shrink: 0; border-right: 1px solid var(--line); padding: 14px 8px; display: flex; flex-direction: column; gap: 2px; }
+.shot-nav b { font-size: 13px; padding: 0 8px 10px; }
+.shot-nav button { text-align: left; border: 0; background: none; color: var(--ink); padding: 7px 8px; border-radius: 6px; cursor: pointer; font: inherit; font-size: 13px; }
+.shot-nav button[aria-current="true"] { background: var(--accent); color: var(--accent-ink); }
+.shot-main { flex: 1; padding: 18px 22px; min-width: 0; }
+.shot-main h3 { margin: 0 0 14px; font-size: 17px; }
+.shot-form { display: flex; flex-direction: column; gap: 12px; max-width: 420px; }
+.shot-form label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: var(--muted); }
+.shot-form input, .shot-form select, .shot-form textarea { font: inherit; font-size: 13px; color: var(--ink); background: var(--sunk);
+  border: 1px solid var(--line); border-radius: 6px; padding: 7px 9px; }
+.shot-form input[type="checkbox"] { align-self: flex-start; }
+.shot-btn { align-self: flex-start; border: 0; border-radius: 6px; padding: 7px 14px; background: var(--accent); color: var(--accent-ink); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.shot-btn.ghost { background: none; color: var(--accent); border: 1px solid var(--line); padding: 4px 10px; font-weight: 500; }
+.shot-rows { border: 1px solid var(--line); border-radius: 8px; padding: 8px; }
+.shot-rows table, .shot-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.shot-rows th, .shot-table th { text-align: left; font-size: 11px; color: var(--muted); padding: 4px 6px; }
+.shot-rows td { padding: 3px; }
+.shot-rows td input { width: 100%; }
+.shot-table td { padding: 8px 6px; border-top: 1px solid var(--line); }
+.shot-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.shot-note { margin-top: 10px; font-size: 12px; color: var(--muted); }
+
+.tree { display: grid; gap: 1px; border: 1px solid var(--line); border-radius: 10px; padding: 6px; background: var(--sunk);
+  max-height: 64vh; overflow: auto; }
+.tree .dir { font: 11px var(--mono); color: var(--faint); padding: 8px 6px 2px; }
+.tree button { text-align: left; border: 0; background: none; padding: 3px 8px; border-radius: 5px; cursor: pointer;
+  font: 12px var(--mono); overflow-wrap: anywhere; }
+.tree button:hover { background: var(--surface); }
+.tree button[aria-current="true"] { background: var(--accent-soft); color: var(--accent); }
+.seg { display: inline-flex; padding: 3px; gap: 2px; border: 1px solid var(--line); border-radius: 9px; background: var(--sunk); }
+.seg button { border: 0; background: none; padding: 5px 12px; cursor: pointer; border-radius: 6px; color: var(--muted); font-weight: 500; }
+.seg button[aria-pressed="true"] { background: var(--raised); color: var(--ink); box-shadow: var(--shadow); }
+.fatal { padding: 12px 14px; border-radius: 8px; background: var(--err-soft); }
+details.llm summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 10px; }
+details.llm summary::-webkit-details-marker { display: none; }
+details.llm summary .chev { margin-left: auto; color: var(--muted); transition: transform .15s; }
+details.llm[open] summary .chev { transform: rotate(90deg); }
+details.llm[open] summary { margin-bottom: 10px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* ---------- docs view */
+#docs-view { background: var(--paper); }
+.docs-wrap { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 57px); }
+.docs-nav { position: sticky; top: 57px; height: calc(100vh - 57px); overflow-y: auto; padding: 20px 12px;
+  border-right: 1px solid var(--line); background: var(--surface); }
+.docs-nav-section { margin-bottom: 20px; }
+.docs-nav-label { font: 10px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--faint); padding: 0 8px 8px; display: block; }
+.docs-nav a { display: block; padding: 5px 8px; color: var(--muted); text-decoration: none; border-radius: 6px; font-size: 13px; font-weight: 500; }
+.docs-nav a:hover { color: var(--ink); background: var(--sunk); }
+.docs-nav a.current { color: var(--accent); background: var(--accent-soft); }
+.docs-body { max-width: 820px; padding: 40px 52px 80px; }
+.docs-body h1 { font-size: 28px; letter-spacing: -.03em; margin: 0 0 8px; }
+.docs-body .tagline { color: var(--muted); margin: 0 0 24px; font-size: 15px; max-width: 68ch; line-height: 1.6; }
+.docs-dl { display: inline-flex; align-items: center; gap: 8px; padding: 9px 18px; background: var(--accent); color: var(--accent-ink); border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 13.5px; margin-bottom: 36px; border: none; cursor: pointer; font: 600 13.5px var(--sans); transition: filter .15s; }
+.docs-dl:hover { filter: brightness(1.08); }
+.docs-body h2 { font-size: 20px; letter-spacing: -.02em; margin: 52px 0 12px; padding-top: 52px; border-top: 1px solid var(--line); scroll-margin-top: 72px; }
+.docs-body h2.first { border-top: none; margin-top: 0; padding-top: 0; }
+.docs-body h3 { font-size: 14.5px; font-weight: 650; margin: 28px 0 6px; color: var(--ink); scroll-margin-top: 72px; }
+.docs-body p { color: var(--muted); max-width: 70ch; margin: 0 0 12px; line-height: 1.65; }
+.docs-body p b, .docs-body p strong, .docs-body li b, .docs-body li strong { color: var(--ink); }
+.docs-body ul, .docs-body ol { color: var(--muted); padding-left: 18px; margin: 0 0 14px; }
+.docs-body li { margin-bottom: 5px; line-height: 1.65; max-width: 70ch; }
+.docs-body pre { margin: 8px 0 18px; padding: 16px 18px; background: var(--sunk); border: 1px solid var(--line); border-radius: 10px; font: 12.5px/1.65 var(--mono); overflow-x: auto; tab-size: 3; white-space: pre; }
+.docs-body table { border-collapse: collapse; width: 100%; margin: 8px 0 18px; font-size: 13px; }
+.docs-body th { text-align: left; font: 10px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 4px 16px 8px 0; border-bottom: 1px solid var(--line); }
+.docs-body td { padding: 8px 16px 8px 0; border-bottom: 1px solid var(--line); color: var(--muted); vertical-align: top; line-height: 1.5; }
+.docs-body td:first-child { font: 12.5px var(--mono); color: var(--ink); white-space: nowrap; }
+.docs-body .syntax { font: 12.5px/1.6 var(--mono); padding: 10px 14px; background: var(--raised); border: 1px solid var(--line-strong); border-radius: 8px; margin: 0 0 10px; overflow-x: auto; white-space: pre; }
+.btn-docs { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line-strong); background: var(--raised); border-radius: 8px; padding: 7px 14px; cursor: pointer; font-weight: 500; font: 500 14px var(--sans); transition: border-color .15s; color: var(--ink); }
+.btn-docs:hover { border-color: var(--accent); }
+.btn-docs[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+
+/* ===================================================================
+   LANDING PAGE
+   =================================================================== */
+html { scroll-behavior: smooth; }
+
+/* nav */
+.site-nav { display: flex; align-items: center; gap: 2px; margin: 0 auto; }
+.site-nav a { padding: 6px 14px; border-radius: 8px; font: 500 13.5px var(--sans); color: var(--muted); text-decoration: none; transition: color .15s, background .15s; }
+.site-nav a:hover { color: var(--ink); background: var(--sunk); }
+
+/* hero */
+.lp-hero {
+  display: grid; grid-template-columns: 1fr 1fr;
+  align-items: center; gap: 56px;
+  padding: 72px 72px 80px;
+  min-height: calc(100vh - 57px);
+  position: relative; overflow: hidden;
+}
+.lp-hero::before {
+  content: ''; position: absolute; right: -80px; top: 50%; transform: translateY(-50%);
+  width: 60%; height: 100%;
+  background: radial-gradient(ellipse at center, color-mix(in srgb, var(--accent) 10%, transparent) 0%, transparent 70%);
+  pointer-events: none; z-index: 0;
+}
+.lp-hero::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background-image: radial-gradient(var(--dot) 1px, transparent 1px); background-size: 22px 22px;
+  mask-image: radial-gradient(ellipse 85% 100% at 62% 50%, rgba(0,0,0,.22) 0%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse 85% 100% at 62% 50%, rgba(0,0,0,.22) 0%, transparent 80%);
+}
+.hero-text { position: relative; z-index: 1; }
+.hero-badge { display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px 4px 8px; border: 1px solid var(--line-strong); border-radius: 99px; font: 500 12px var(--mono); color: var(--muted); margin-bottom: 28px; background: var(--surface); }
+.hero-badge-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 8px color-mix(in srgb, var(--ok) 55%, transparent); }
+.hero-h1 { font-family: var(--display); font-size: clamp(38px, 4.5vw, 62px); font-weight: 800; line-height: 1.05; letter-spacing: -.035em; margin: 0 0 22px; text-wrap: balance; }
+.hero-h1 em { font-style: normal; color: var(--accent); }
+.hero-lead { font-size: 16.5px; line-height: 1.75; color: var(--muted); max-width: 44ch; margin: 0 0 36px; }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 24px; }
+.btn-lp-primary { display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; background: var(--accent); color: var(--accent-ink); border-radius: 10px; border: none; cursor: pointer; font: 700 15px var(--sans); text-decoration: none; transition: filter .15s; }
+.btn-lp-primary:hover { filter: brightness(1.1); }
+.btn-lp-secondary { display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; border: 1px solid var(--line-strong); border-radius: 10px; font: 500 15px var(--sans); text-decoration: none; color: var(--ink); background: var(--surface); transition: border-color .15s, color .15s; }
+.btn-lp-secondary:hover { border-color: var(--accent); color: var(--accent); }
+.hero-langs { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.hero-langs-lbl { font: 12px var(--mono); color: var(--faint); }
+.lang-pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); font: 12px var(--mono); color: var(--muted); }
+
+/* hero demo */
+.hero-demo { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 0; }
+.demo-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; box-shadow: 0 4px 24px color-mix(in srgb, #000 18%, transparent), 0 1px 3px color-mix(in srgb, #000 12%, transparent); }
+.demo-titlebar { display: flex; align-items: center; gap: 8px; padding: 9px 14px; background: var(--sunk); border-bottom: 1px solid var(--line); }
+.demo-circles { display: flex; gap: 5px; }
+.demo-circles span { width: 10px; height: 10px; border-radius: 50%; }
+.demo-circles span:nth-child(1) { background: #ef4444; }
+.demo-circles span:nth-child(2) { background: #eab308; }
+.demo-circles span:nth-child(3) { background: #22c55e; }
+.demo-fname { font: 12px var(--mono); color: var(--faint); margin-left: 4px; }
+.demo-pre { margin: 0; padding: 14px 18px; font: 12.5px/1.7 var(--mono); overflow: hidden; white-space: pre; tab-size: 2; }
+.demo-compiled { display: flex; align-items: center; gap: 12px; padding: 8px 16px; }
+.demo-compiled::before, .demo-compiled::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+.demo-compiled-lbl { font: 700 10.5px var(--mono); letter-spacing: .07em; text-transform: uppercase; color: var(--accent); white-space: nowrap; }
+.demo-tabs { display: flex; border-bottom: 1px solid var(--line); }
+.demo-tab { padding: 7px 14px; font: 12px var(--mono); color: var(--muted); border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color .12s; }
+.demo-tab.on { color: var(--accent); border-bottom-color: var(--accent); }
+.demo-tab:hover:not(.on) { color: var(--ink); }
+.demo-panes > div { display: none; }
+.demo-panes > div.on { display: block; }
+
+/* syntax tokens */
+.tk-kw { color: var(--call); }
+.tk-str { color: var(--ok); }
+.tk-num { color: var(--accent); }
+.tk-fn { color: var(--compute); }
+.tk-ty { color: var(--trigger); }
+.tk-hd { color: var(--accent); font-weight: 600; }
+.tk-dc { color: var(--validate); }
+.tk-dk { color: var(--call); }
+.tk-cm { color: var(--faint); }
+
+/* features */
+.lp-features { padding: 80px 72px; border-top: 1px solid var(--line); }
+.lp-eyebrow { font: 700 11px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin: 0 0 12px; }
+.lp-heading { font-family: var(--display); font-size: clamp(26px, 3vw, 40px); font-weight: 800; letter-spacing: -.025em; margin: 0 0 48px; line-height: 1.15; text-wrap: balance; }
+.lp-feat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.lp-feat-card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 26px 22px; transition: border-color .2s, transform .2s; }
+.lp-feat-card:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); transform: translateY(-2px); }
+.feat-ico { width: 42px; height: 42px; border-radius: 11px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; margin-bottom: 14px; }
+.feat-ico svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.lp-feat-card h3 { font: 700 15px var(--sans); margin: 0 0 8px; letter-spacing: -.01em; }
+.lp-feat-card p { font-size: 13.5px; color: var(--muted); margin: 0; line-height: 1.65; }
+
+/* how it works */
+.lp-how { padding: 80px 72px; border-top: 1px solid var(--line); background: var(--surface); }
+.lp-how-steps { display: grid; grid-template-columns: 1fr 40px 1fr 40px 1fr; align-items: start; gap: 12px; margin-top: 40px; }
+.how-step-n { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 12px; background: var(--accent); color: var(--accent-ink); font: 700 17px var(--sans); margin-bottom: 14px; }
+.lp-how-step h3 { font: 700 16px var(--sans); margin: 0 0 8px; letter-spacing: -.01em; }
+.lp-how-step p { font-size: 14px; color: var(--muted); margin: 0; line-height: 1.65; max-width: 28ch; }
+.lp-how-arrow { display: grid; place-items: center; padding-top: 10px; color: var(--line-strong); }
+.lp-how-arrow svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.5; stroke-linecap: round; }
+
+/* studio section */
+.lp-studio { border-top: 1px solid var(--line); }
+.lp-studio-intro { padding: 64px 72px 4px; display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+.lp-studio-intro h2 { font-family: var(--display); font-size: clamp(24px, 2.5vw, 34px); font-weight: 800; letter-spacing: -.025em; margin: 0 0 6px; }
+.lp-studio-intro p { font-size: 15px; color: var(--muted); margin: 0; max-width: 54ch; line-height: 1.6; }
+
+/* footer */
+.lp-footer { border-top: 1px solid var(--line); padding: 32px 72px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 40px; }
+.lp-footer-brand { font-family: var(--display); font-weight: 800; font-size: 16px; letter-spacing: -.02em; }
+.lp-footer-copy { font-size: 12.5px; color: var(--faint); }
+.lp-footer-links { display: flex; gap: 20px; flex-wrap: wrap; margin-left: auto; }
+.lp-footer-links a { color: var(--muted); font-size: 13.5px; text-decoration: none; transition: color .15s; }
+.lp-footer-links a:hover { color: var(--ink); }
+
+/* studio back-link */
+.site-nav-back { font: 500 13.5px var(--sans); color: var(--muted); text-decoration: none; padding: 6px 12px; border-radius: 8px; transition: color .15s; }
+.site-nav-back:hover { color: var(--ink); background: var(--sunk); }
+
+/* responsive */
+@media (max-width: 1200px) {
+  .lp-hero, .lp-features, .lp-how, .lp-studio-intro, .lp-footer { padding-left: 40px; padding-right: 40px; }
+}
+@media (max-width: 960px) {
+  .lp-hero { grid-template-columns: 1fr; min-height: 0; padding: 48px 24px 60px; }
+  .hero-demo { display: none; }
+  .lp-feat-grid { grid-template-columns: 1fr 1fr; }
+  .lp-how-steps { grid-template-columns: 1fr; }
+  .lp-how-arrow { display: none; }
+  .lp-features, .lp-how { padding: 56px 24px; }
+  .lp-studio-intro { padding: 40px 24px 4px; }
+  .lp-footer { padding: 28px 24px; }
+  .site-nav { display: none; }
+}
+@media (max-width: 560px) {
+  .lp-feat-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <svg viewBox="0 0 32 32" aria-hidden="true">
+      <rect width="32" height="32" rx="9" fill="var(--accent)"/>
+      <path d="M10 7c7 1 12 6 12 13 0 2-.4 3.6-1.2 5l-2.3-1.2c.6-1.1.9-2.4.9-3.8 0-5.4-3.8-9.3-9.4-10.2z" fill="var(--accent-ink)"/>
+      <path d="M18.7 24.8 16 27l.3-3.4" fill="none" stroke="var(--accent-ink)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span class="word">Danta</span><span class="sub">Spec Studio</span>
+  </div>
+  <a href="index.html" class="site-nav-back">← Home</a>
+  <button class="btn-docs" id="docs-toggle" aria-pressed="false">Docs</button>
+  <div class="theme" role="group" aria-label="Colour theme">
+    <button data-theme-set="system" title="Match the system" aria-label="System theme">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></button>
+    <button data-theme-set="light" title="Light" aria-label="Light theme">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+    <button data-theme-set="dark" title="Dark" aria-label="Dark theme">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+  </div>
+</header>
+
+
+<main>
+  <div class="col left">
+    <details class="card llm" open>
+      <summary><h2><span class="n">1</span>Get a spec from your LLM</h2><span class="chev">›</span></summary>
+      <p>The prompt teaches an LLM the Danta Spec language. Paste it into Claude or another LLM, describe your use case after <code>USE CASE</code>, and send. It replies with a spec.</p>
+      <div class="row">
+        <button class="btn primary" id="copy-prompt">Copy prompt</button>
+        <button class="btn" id="toggle-prompt" aria-expanded="false">Show prompt</button>
+        <a class="btn" id="dl-skill" href="danta-skill.md" download="danta-skill.md">↓ Skill file</a>
+        <span class="hint" id="prompt-status"></span>
+      </div>
+      <textarea class="prompt-box" id="prompt" readonly hidden aria-label="LLM prompt"></textarea>
+    </details>
+
+    <section class="card">
+      <h2><span class="n">2</span>Paste the spec</h2>
+      <p>Paste the LLM's whole reply; code fences and extra text are stripped.</p>
+      <div class="editor">
+        <pre class="gutter" id="gutter" aria-hidden="true">1</pre>
+        <textarea id="spec" spellcheck="false" aria-label="Danta Spec"></textarea>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="build">Build</button>
+        <span class="hint"><kbd>⌘</kbd> <kbd>Enter</kbd></span>
+        <span class="spacer"></span>
+        <select class="btn" id="examples" aria-label="Load an example"><option value="">Load an example…</option></select>
+      </div>
+      <div class="issues" id="issues"></div>
+    </section>
+  </div>
+
+  <div class="col">
+    <section class="card" id="results"><div class="empty">Building…</div></section>
+  </div>
+</main>
+
+<!-- ================================================================ DOCS VIEW -->
+<div id="docs-view">
+<div class="docs-wrap">
+
+<nav class="docs-nav" aria-label="Documentation">
+  <div class="docs-nav-section">
+    <span class="docs-nav-label">Grammar</span>
+    <a href="#doc-overview">Overview</a>
+    <a href="#doc-header">Spec Header</a>
+    <a href="#doc-constants">Constants</a>
+    <a href="#doc-entities">Entities</a>
+    <a href="#doc-services">Services</a>
+    <a href="#doc-flows">Flows</a>
+  </div>
+  <div class="docs-nav-section">
+    <span class="docs-nav-label">Step Types</span>
+    <a href="#doc-validate">Validate</a>
+    <a href="#doc-compute">Compute</a>
+    <a href="#doc-call">Call</a>
+    <a href="#doc-query">Query</a>
+    <a href="#doc-publish">Publish</a>
+    <a href="#doc-if">If</a>
+    <a href="#doc-parallel">In parallel</a>
+    <a href="#doc-persist">Save / Update / Delete</a>
+    <a href="#doc-notify">Notifications</a>
+    <a href="#doc-respond">Respond with</a>
+    <a href="#doc-stop">Stop</a>
+  </div>
+  <div class="docs-nav-section">
+    <span class="docs-nav-label">Reference</span>
+    <a href="#doc-expressions">Expressions</a>
+    <a href="#doc-types">Types</a>
+    <a href="#doc-screens">Screens</a>
+  </div>
+</nav>
+
+<article class="docs-body">
+  <h1>Danta Grammar Reference</h1>
+  <p class="tagline">A Danta spec is a plain-text Markdown file that compiles deterministically to Python, JavaScript, and Java. This reference covers every keyword and construct the compiler recognises.</p>
+  <button class="docs-dl" id="docs-dl-skill">↓ Download skill file — paste into any LLM to write specs</button>
+
+  <!-- OVERVIEW -->
+  <h2 class="first" id="doc-overview">Overview</h2>
+  <p>The compiler reads the file in one pass: layout first (which section each line belongs to, step nesting, numbering), then semantics (types, name resolution, IR2 validity). Every error is reported against the spec line that caused it.</p>
+  <p><strong>Sections, in fixed order:</strong></p>
+  <ol>
+    <li><code>Spec: danta/0.1</code> — version line, always first</li>
+    <li><code># System: &lt;name&gt;</code> — system declaration + description</li>
+    <li><code>## Constants</code> — named values <em>(optional)</em></li>
+    <li><code>## Entities</code> — data shapes <em>(optional)</em></li>
+    <li><code>## Services</code> — external service signatures <em>(optional)</em></li>
+    <li><code>## Flow: &lt;name&gt;</code> — one or more flows</li>
+    <li><code>## Screen: &lt;name&gt;</code> — UI screens <em>(optional, after flows)</em></li>
+  </ol>
+  <p>Constants, Entities, and Services must all appear before the first <code>## Flow:</code>. Lines starting with <code>&gt;</code> are ignored anywhere — use them for inline comments.</p>
+
+  <!-- SPEC HEADER -->
+  <h2 id="doc-header">Spec Header</h2>
+  <p>Every spec starts with two mandatory declarations.</p>
+  <h3>Version line</h3>
+  <p>Must be the very first non-blank line:</p>
+  <pre>Spec: danta/0.1</pre>
+  <h3>System declaration</h3>
+  <pre># System: shop-orders
+Takes orders over HTTP, charges them and confirms them.</pre>
+  <table>
+    <thead><tr><th>Element</th><th>Pattern</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><code># System: &lt;name&gt;</code></td><td><code>[a-z][a-z0-9_-]*</code></td><td>Lowercase, hyphens allowed</td></tr>
+      <tr><td>Description</td><td>free prose</td><td>Lines after the heading until the next <code>##</code>; concatenated into one string</td></tr>
+    </tbody>
+  </table>
+  <p>A spec with no <code># System:</code> heading, or with no <code>## Flow:</code>, is an error.</p>
+
+  <!-- CONSTANTS -->
+  <h2 id="doc-constants">Constants</h2>
+  <p>Named values referenced by name in any value slot across all flows. Each constant is one <code>-&nbsp;</code> line:</p>
+  <pre>## Constants
+- LARGE_ORDER = 100000
+- LATE_DAYS = 30
+- SALES_CHANNEL = "#sales"
+- ACTIVE = true</pre>
+  <table>
+    <thead><tr><th>Part</th><th>Rule</th></tr></thead>
+    <tbody>
+      <tr><td>Name</td><td><code>UPPER_SNAKE_CASE</code> — <code>[A-Z][A-Z0-9_]*</code></td></tr>
+      <tr><td>Value</td><td>Integer, <code>"double-quoted string"</code>, or <code>true</code> / <code>false</code></td></tr>
+    </tbody>
+  </table>
+  <p>Each name must be unique. No expressions — literals only.</p>
+
+  <!-- ENTITIES -->
+  <h2 id="doc-entities">Entities</h2>
+  <p>Persistent data shapes that flows can <a href="#doc-query">Query</a>, <a href="#doc-persist">Save, Update, and Delete</a>. Each entity is one <code>-&nbsp;</code> line:</p>
+  <pre>## Entities
+- order: order_id str, total int, charge_id str, status str
+- invoice: invoice_id str, customer_email str, amount int, days_late int, status str</pre>
+  <h3>Field types</h3>
+  <table>
+    <thead><tr><th>Type</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><code>int</code></td><td>32-bit signed integer</td></tr>
+      <tr><td><code>str</code></td><td>Unicode string</td></tr>
+      <tr><td><code>bool</code></td><td><code>true</code> or <code>false</code></td></tr>
+      <tr><td><code>list of T</code></td><td>List of another type, e.g. <code>list of int</code>, <code>list of (sku str, amount int)</code></td></tr>
+      <tr><td><code>(f1 T1, f2 T2, ...)</code></td><td>Inline record</td></tr>
+      <tr><td><code>&lt;entity name&gt;</code></td><td>Another declared entity used as a nested type</td></tr>
+    </tbody>
+  </table>
+  <ul>
+    <li>Entity name: <code>[a-z][a-z0-9_]*]</code> — must be unique.</li>
+    <li>Field names must be unique within the entity.</li>
+    <li>The <strong>first field is the key</strong> — the only field required by <code>Delete</code>.</li>
+    <li><code>Save</code> and <code>Update</code> require every field.</li>
+  </ul>
+
+  <!-- SERVICES -->
+  <h2 id="doc-services">Services</h2>
+  <p>External operations a flow can <a href="#doc-call">Call</a>. Each service is one <code>-&nbsp;</code> line with a signature:</p>
+  <pre>## Services
+- payments.charge(order_id str, amount int) -> (charge_id str, status str)
+- inventory.reserve(sku str, qty int) -> (reserved bool)</pre>
+  <p><strong>Syntax:</strong> <code>- &lt;service&gt;.&lt;operation&gt;(&lt;params&gt;) -&gt; (&lt;outputs&gt;)</code></p>
+  <ul>
+    <li><code>service</code> and <code>operation</code>: <code>[a-z][a-z0-9_]*</code></li>
+    <li>Params and outputs: comma-separated <code>field type</code> pairs, same types as Entities.</li>
+    <li>A service with multiple operations appears on separate lines.</li>
+    <li>Each <code>service.operation</code> pair must be unique.</li>
+  </ul>
+
+  <!-- FLOWS -->
+  <h2 id="doc-flows">Flows</h2>
+  <p>A flow is the unit of compiled logic. Each starts with a <code>## Flow:</code> heading followed by four header fields, then numbered steps.</p>
+  <pre>## Flow: order_checkout
+Intent: Reject empty orders, price the order, charge it, then confirm and save it.
+Trigger: POST /orders with order_id str, customer_email str, tier str, items list of (sku str, amount int)
+Mode: sync
+Steps:
+1. ...</pre>
+  <p><strong>Flow name:</strong> <code>[a-z][a-z0-9_]*</code> — unique across the spec.</p>
+  <h3>Intent</h3>
+  <p>Free prose describing the flow's purpose. Not compiled — shown in the Studio and stored as metadata.</p>
+  <h3>Trigger</h3>
+  <table>
+    <thead><tr><th>Form</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td>HTTP</td><td><code>POST /orders with order_id str, amount int</code></td></tr>
+      <tr><td>Event</td><td><code>event payment_received with invoice_id str, amount int</code></td></tr>
+      <tr><td>Schedule</td><td><code>schedule "0 2 * * *" with run_date str</code></td></tr>
+      <tr><td>Topic</td><td><code>topic invoice.reminder with invoice_id str</code></td></tr>
+    </tbody>
+  </table>
+  <ul>
+    <li>HTTP methods: <code>GET</code>, <code>POST</code>, <code>PUT</code>, <code>DELETE</code>. Path starts with <code>/</code>.</li>
+    <li><code>with &lt;fields&gt;</code> is optional when the trigger carries no payload.</li>
+    <li>Payload fields are accessed as <code>input.&lt;field&gt;</code>, or just <code>&lt;field&gt;</code> when unambiguous.</li>
+  </ul>
+  <h3>Mode</h3>
+  <ul>
+    <li><code>sync</code> — the trigger waits for the flow; only valid for HTTP. Use with <code>Respond with</code>.</li>
+    <li><code>async</code> — fire and forget; required for <code>schedule</code>, <code>event</code>, and <code>topic</code>.</li>
+  </ul>
+  <h3>Steps</h3>
+  <p>The <code>Steps:</code> line ends the header. What follows is a numbered list (<code>1.</code>, <code>2.</code>, ...). Sub-steps under <code>If</code> or <code>In parallel</code> are lettered (<code>a.</code>, <code>b.</code>, ...). Numbering must be sequential — gaps are an error.</p>
+  <p>An optional title goes in <code>[square brackets]</code> before the keyword: <code>1. [Check items] Validate: ...</code>. Steps can continue onto the next line if indented. The <code>Tab</code> key in the editor inserts three spaces.</p>
+
+  <!-- VALIDATE -->
+  <h2 id="doc-validate">Validate</h2>
+  <p>Checks a condition and stops the flow if it fails.</p>
+  <div class="syntax">Validate: &lt;condition&gt;. Otherwise stop with error "&lt;msg&gt;" [, responding with &lt;fields&gt;]
+Validate: &lt;condition&gt;. Otherwise fail with "&lt;msg&gt;"</div>
+  <pre>1. [Has items?] Validate: `len(items) > 0`. Otherwise stop with error "order has no items".
+2. Validate: `amount > 0`. Otherwise stop with error "bad amount", responding with order_id.
+3. Validate: `active`. Otherwise fail with "account is inactive".</pre>
+  <ul>
+    <li><code>Otherwise stop</code> — sync. Sends an error response with <code>reason</code> field.</li>
+    <li><code>responding with order_id, total</code> — adds extra fields alongside <code>reason</code>.</li>
+    <li><code>Otherwise fail</code> — async variant; no response body.</li>
+  </ul>
+
+  <!-- COMPUTE -->
+  <h2 id="doc-compute">Compute</h2>
+  <p>Assigns named computed values accessible later as <code>&lt;name&gt;.&lt;var&gt;</code>.</p>
+  <div class="syntax">Compute &lt;name&gt;:
+   - &lt;var&gt;: &lt;value&gt;
+   - &lt;var&gt;: &lt;value&gt;</div>
+  <pre>2. [Price it] Compute pricing:
+   - subtotal: `sum(items.amount)`
+   - discount: `subtotal / 10 if tier == "gold" else 0`
+   - total: `subtotal - discount`</pre>
+  <ul>
+    <li>Name must be unique. Variables computed in declaration order; later ones can reference earlier ones.</li>
+    <li>Access results as <code>pricing.subtotal</code>, <code>pricing.total</code>, etc.</li>
+    <li>A Compute step with no <code>-&nbsp;</code> lines is an error.</li>
+  </ul>
+
+  <!-- CALL -->
+  <h2 id="doc-call">Call</h2>
+  <p>Invokes an external service operation declared under <code>## Services</code>.</p>
+  <div class="syntax">Call &lt;service&gt;.&lt;op&gt; [as &lt;name&gt;] [with &lt;args&gt;] [. Retry N time(s).] [. On failure stop with error "&lt;msg&gt;" [, responding with &lt;fields&gt;].]</div>
+  <pre>3. [Charge] Call payments.charge with order_id, amount = pricing.total. Retry 2 times. On failure stop with error "payment failed", responding with order_id.
+4. Call inventory.reserve as res with sku = item.sku, qty = 1.</pre>
+  <table>
+    <thead><tr><th>Clause</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><code>as &lt;name&gt;</code></td><td>Names the call's outputs; defaults to the operation name</td></tr>
+      <tr><td><code>with param</code></td><td>Shorthand for <code>with param = param</code></td></tr>
+      <tr><td><code>with param = value</code></td><td>Explicit argument binding</td></tr>
+      <tr><td><code>Retry N time(s)</code></td><td>0–3 retries on transient failure</td></tr>
+      <tr><td><code>On failure stop with error "..."</code></td><td>Stop the flow on permanent failure; optional <code>responding with</code></td></tr>
+    </tbody>
+  </table>
+  <p>Outputs are accessed as <code>&lt;name&gt;.&lt;field&gt;</code>, e.g. <code>charge.charge_id</code>.</p>
+
+  <!-- QUERY -->
+  <h2 id="doc-query">Query</h2>
+  <p>Loads a list of entity records from the store.</p>
+  <div class="syntax">Query &lt;entity&gt; as &lt;name&gt; [where field = value, ...]</div>
+  <pre>5. Query invoice as open_invoices where status = "open".
+6. Query order as all_orders.</pre>
+  <ul>
+    <li>Result is a list. Use <code>len(open_invoices)</code>, <code>open_invoices.field</code> (gives a list of field values), or <a href="#doc-publish"><code>Publish each</code></a> over it.</li>
+    <li>Entity must be declared under <code>## Entities</code>.</li>
+    <li><code>where</code> filter accepts multiple <code>field = value</code> pairs, comma-separated.</li>
+  </ul>
+
+  <!-- PUBLISH -->
+  <h2 id="doc-publish">Publish</h2>
+  <p>Sends one or more messages to a topic (async fan-out).</p>
+  <div class="syntax">Publish to topic "&lt;name&gt;": field = value, field = value, ...
+Publish each &lt;list&gt; to topic "&lt;name&gt;"</div>
+  <pre>6. Publish to topic "order.placed": order_id = order_id, total = pricing.total.
+7. Publish each open_invoices to topic "invoice.reminder".</pre>
+  <ul>
+    <li>First form — a single message with explicit fields.</li>
+    <li>Second form — one message per item in the list, with all fields of each record.</li>
+    <li>Topic name pattern: <code>[a-z][a-z0-9_.-]*</code></li>
+  </ul>
+
+  <!-- IF -->
+  <h2 id="doc-if">If</h2>
+  <p>Conditional branch with optional else clause.</p>
+  <div class="syntax">If &lt;condition&gt;:
+   a. &lt;step&gt;
+   b. &lt;step&gt;
+Otherwise:
+   a. &lt;step&gt;</div>
+  <pre>4. [Large order?] If `pricing.total >= LARGE_ORDER`:
+   a. [Alert sales] Slack SALES_CHANNEL: "Large order {order_id}: {pricing.total} cents".
+Otherwise:
+   a. Stop.</pre>
+  <ul>
+    <li><code>Otherwise:</code> at the same indent as <code>If</code> holds the false branch; omitting it skips straight to the next step.</li>
+    <li>Both branches rejoin at the step after the <code>If</code>.</li>
+    <li>Sub-steps are lettered (<code>a.</code>, <code>b.</code>, ...) and can include any step type including nested <code>If</code>.</li>
+  </ul>
+
+  <!-- IN PARALLEL -->
+  <h2 id="doc-parallel">In parallel</h2>
+  <p>Runs two or more sub-steps concurrently and waits for all to complete before continuing.</p>
+  <div class="syntax">In parallel:
+   a. &lt;one step&gt;
+   b. &lt;one step&gt;</div>
+  <pre>5. [Confirm] In parallel:
+   a. Email customer_email: "Order {order_id} confirmed. Total: {pricing.total}".
+   b. Save order: order_id, total = pricing.total, charge_id = charge.charge_id, status = "confirmed".</pre>
+  <ul>
+    <li>Each branch is <strong>exactly one step</strong> — no nested <code>If</code> or <code>In parallel</code>.</li>
+    <li>Branches cannot stop the flow, respond, or use <code>On failure</code> on a Call.</li>
+    <li>Outputs of parallel steps are not accessible in subsequent steps.</li>
+    <li>Requires at least two lettered sub-steps.</li>
+  </ul>
+
+  <!-- SAVE / UPDATE / DELETE -->
+  <h2 id="doc-persist">Save / Update / Delete</h2>
+  <p>Persists entity records in the store.</p>
+  <div class="syntax">Save &lt;entity&gt;: field = value, field = value, ...
+Update &lt;entity&gt;: field = value, field = value, ...
+Delete &lt;entity&gt; where &lt;key_field&gt; = value</div>
+  <pre>9.  Save order: order_id, total = pricing.total, charge_id = charge.charge_id, status = "new".
+10. Update invoice: invoice_id, status = "reminded".
+11. Delete order where order_id = order_id.</pre>
+  <table>
+    <thead><tr><th>Operation</th><th>Required fields</th></tr></thead>
+    <tbody>
+      <tr><td><code>Save</code></td><td>Every field (insert)</td></tr>
+      <tr><td><code>Update</code></td><td>Every field</td></tr>
+      <tr><td><code>Delete</code></td><td>First (key) field only, with <code>where</code></td></tr>
+    </tbody>
+  </table>
+  <p>Bare <code>field</code> is shorthand for <code>field = field</code>. Entity must be declared under <code>## Entities</code>.</p>
+
+  <!-- NOTIFICATIONS -->
+  <h2 id="doc-notify">Notifications</h2>
+  <p>Sends a message over a channel.</p>
+  <div class="syntax">&lt;Channel&gt; &lt;to&gt;: &lt;message&gt;</div>
+  <pre>12. Email customer_email: "Your order {order_id} is confirmed. Total: {pricing.total}".
+13. Slack SALES_CHANNEL: "New order {order_id} from {customer_email}".
+14. SMS phone_number: "Your code is {code}".
+15. Webhook callback_url: "done".</pre>
+  <table>
+    <thead><tr><th>Channel</th><th>Typical <code>&lt;to&gt;</code></th></tr></thead>
+    <tbody>
+      <tr><td><code>Email</code></td><td>An email address field</td></tr>
+      <tr><td><code>Slack</code></td><td>A channel constant like <code>SALES_CHANNEL</code></td></tr>
+      <tr><td><code>SMS</code></td><td>A phone number field</td></tr>
+      <tr><td><code>Webhook</code></td><td>A URL field</td></tr>
+    </tbody>
+  </table>
+  <p>Both <code>&lt;to&gt;</code> and <code>&lt;message&gt;</code> are value slots (name, path, template string, or backtick expression).</p>
+
+  <!-- RESPOND WITH -->
+  <h2 id="doc-respond">Respond with</h2>
+  <p>Ends a sync flow with a success response. Only valid in <code>Mode: sync</code>.</p>
+  <div class="syntax">Respond with field [= value], field [= value], ...</div>
+  <pre>16. Respond with order_id, charge_id = charge.charge_id, total = pricing.total.</pre>
+  <ul>
+    <li>Bare <code>field</code> is shorthand for <code>field = field</code>.</li>
+    <li>Multiple fields are comma-separated.</li>
+    <li>Using <code>Respond with</code> in an <code>async</code> flow is an error.</li>
+  </ul>
+
+  <!-- STOP -->
+  <h2 id="doc-stop">Stop</h2>
+  <p>Ends the flow. Three forms:</p>
+  <pre>17. Stop.
+18. Stop with error "not found".
+19. Stop with error "payment failed", responding with order_id.</pre>
+  <ul>
+    <li>Bare <code>Stop</code> — ends with status <code>ok</code>.</li>
+    <li><code>Stop with error "..."</code> — ends with status <code>error</code>; in sync flows sends a response with a <code>reason</code> field.</li>
+    <li><code>responding with</code> adds extra fields to the error response.</li>
+    <li>A flow that falls off the end of its last step without an explicit end is implicitly stopped with <code>ok</code>.</li>
+  </ul>
+
+  <!-- EXPRESSIONS -->
+  <h2 id="doc-expressions">Expressions</h2>
+  <p>Any value slot (in Compute, Validate, If, response fields, etc.) accepts five forms:</p>
+  <table>
+    <thead><tr><th>Form</th><th>Example</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Name or path</td><td><code>order_id</code>, <code>pricing.total</code>, <code>input.items</code></td><td>Resolves to a declared field</td></tr>
+      <tr><td>Constant</td><td><code>LARGE_ORDER</code></td><td><code>UPPER_SNAKE_CASE</code></td></tr>
+      <tr><td>Integer literal</td><td><code>42</code>, <code>-7</code></td><td>32-bit signed</td></tr>
+      <tr><td>String template</td><td><code>"Order {order_id}: {pricing.total}"</code></td><td><code>{name}</code> interpolates; <code>{{</code> / <code>}}</code> are literal braces</td></tr>
+      <tr><td>Exact expression</td><td><code>`len(items) &gt; 0`</code></td><td>Backtick-wrapped; full expression language</td></tr>
+    </tbody>
+  </table>
+  <p>Plain English prose is accepted but marks the slot as an <strong>intent</strong> — a placeholder the logic model fills in. The flow compiles structurally but cannot run until every intent is resolved.</p>
+  <h3>Exact expression language</h3>
+  <table>
+    <thead><tr><th>Category</th><th>Operators / syntax</th></tr></thead>
+    <tbody>
+      <tr><td>Arithmetic</td><td><code>+</code> <code>-</code> <code>*</code> <code>/</code> (truncating) <code>%</code></td></tr>
+      <tr><td>Comparison</td><td><code>==</code> <code>!=</code> <code>&lt;</code> <code>&lt;=</code> <code>&gt;</code> <code>&gt;=</code></td></tr>
+      <tr><td>Boolean</td><td><code>and</code> <code>or</code> <code>not</code></td></tr>
+      <tr><td>Conditional</td><td><code>value if cond else other</code></td></tr>
+      <tr><td>Functions</td><td><code>len(x)</code>, <code>abs(x)</code>, <code>sum(list)</code>, <code>product(list)</code>, <code>min(list)</code>, <code>max(list)</code>, <code>count(list)</code></td></tr>
+      <tr><td>Range</td><td><code>sum(range(lo, hi) ...)</code> — reduce over an integer range</td></tr>
+      <tr><td>Field pluck</td><td><code>items.amount</code> on a list of records → list of that field's values</td></tr>
+    </tbody>
+  </table>
+  <h3>Reduction modifiers</h3>
+  <p>Chained after a reduction function (<code>sum</code>, <code>count</code>, <code>min</code>, <code>max</code>, <code>product</code>):</p>
+  <table>
+    <thead><tr><th>Modifier</th><th>Effect</th></tr></thead>
+    <tbody>
+      <tr><td><code>where &gt; k</code> / <code>where &lt; k</code></td><td>Filter by numeric threshold</td></tr>
+      <tr><td><code>where even</code> / <code>where odd</code></td><td>Filter by parity</td></tr>
+      <tr><td><code>where divisible by k</code></td><td>Filter by divisibility</td></tr>
+      <tr><td><code>each * k</code> / <code>each + k</code></td><td>Scale each element before reducing</td></tr>
+      <tr><td><code>each squared</code></td><td>Square each element before reducing</td></tr>
+    </tbody>
+  </table>
+  <pre>`sum(xs.v where > 0)`
+`count(items each * 3 where even)`
+`sum(range(1, 10) each squared)`</pre>
+
+  <!-- TYPES -->
+  <h2 id="doc-types">Types</h2>
+  <p>The same type syntax is used everywhere — trigger payloads, entity fields, service signatures, and inline records:</p>
+  <table>
+    <thead><tr><th>Type</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td><code>int</code></td><td><code>amount int</code></td></tr>
+      <tr><td><code>str</code></td><td><code>customer_email str</code></td></tr>
+      <tr><td><code>bool</code></td><td><code>active bool</code></td></tr>
+      <tr><td><code>list of T</code></td><td><code>items list of (sku str, amount int)</code></td></tr>
+      <tr><td><code>(f T, f T, ...)</code></td><td><code>(sku str, amount int)</code></td></tr>
+      <tr><td><code>&lt;entity&gt;</code></td><td><code>order</code> (declared entity used as a type)</td></tr>
+    </tbody>
+  </table>
+
+  <!-- SCREENS -->
+  <h2 id="doc-screens">Screens</h2>
+  <p>UI forms and list views layered on top of flows. Screens appear after all flows and are optional.</p>
+  <pre>## Screen: checkout
+Title: Place an Order
+Shows: form for order_checkout
+Fields:
+- order_id "Order ID": generated
+- customer_email "Email"
+- tier "Tier"
+Submit: Place order
+After: Your order has been placed.</pre>
+  <table>
+    <thead><tr><th>Key</th><th>Required</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><code>Title:</code></td><td>yes</td><td>Display title of the screen</td></tr>
+      <tr><td><code>Shows:</code></td><td>yes</td><td><code>form for &lt;flow&gt;</code> or <code>list of &lt;entity&gt;</code></td></tr>
+      <tr><td><code>Fields:</code></td><td>no</td><td><code>-&nbsp;&lt;field&gt; "Label" [: generated]</code> — one per line</td></tr>
+      <tr><td><code>Columns:</code></td><td>no</td><td><code>-&nbsp;&lt;field&gt; "Label"</code> — for list screens</td></tr>
+      <tr><td><code>Actions:</code></td><td>no</td><td><code>-&nbsp;&lt;name&gt; "Label"</code></td></tr>
+      <tr><td><code>Submit:</code></td><td>no</td><td>Submit button label</td></tr>
+      <tr><td><code>After:</code></td><td>no</td><td>Message shown after success</td></tr>
+      <tr><td><code>Filter:</code></td><td>no</td><td>Condition to pre-filter a list view</td></tr>
+    </tbody>
+  </table>
+  <p>Screen name: <code>[a-z][a-z0-9_]*</code> — unique across all screens. The <code>generated</code> marker on a field means the UI auto-generates that value (e.g. a UUID) rather than showing an input.</p>
+
+</article>
+</div>
+</div>
+<!-- ================================================================ /DOCS VIEW -->
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+
+  // ---------------------------------------------------------------- theme
+  function applyTheme(choice) {
+    if (choice === 'light' || choice === 'dark') document.documentElement.dataset.theme = choice;
+    else delete document.documentElement.dataset.theme;
+    document.querySelectorAll('[data-theme-set]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.themeSet === choice)));
+    try { localStorage.setItem('danta-theme', choice); } catch (e) {}
+  }
+  let savedTheme = 'system';
+  try { savedTheme = localStorage.getItem('danta-theme') || 'system'; } catch (e) {}
+  applyTheme(savedTheme);
+  document.querySelectorAll('[data-theme-set]').forEach((b) => b.addEventListener('click', () => applyTheme(b.dataset.themeSet)));
+  const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const KC = { trigger: 'trigger', call: 'call', compute: 'compute', validate: 'validate', branch: 'branch',
+               parallel: 'flowk', join: 'flowk', persist: 'persist', notify: 'notify', query: 'persist', publish: 'notify' };
+  let last = null, flowIdx = 0, tab = 'flowchart', runIdx = 0, selStep = null, examples = [], screenIdx = 0;
+  let projLang = 'python', projFile = null;
+
+  // ---------------------------------------------------------------- editor
+  const spec = $('spec'), gutter = $('gutter');
+  let badLines = new Set();
+  function renderGutter() {
+    const n = spec.value.split('\n').length;
+    let out = '';
+    for (let i = 1; i <= n; i++) out += badLines.has(i) ? `<span class="bad">${i}</span>\n` : `${i}\n`;
+    gutter.innerHTML = out;
+    gutter.scrollTop = spec.scrollTop;
+  }
+  spec.addEventListener('input', renderGutter);
+  spec.addEventListener('scroll', () => { gutter.scrollTop = spec.scrollTop; });
+  spec.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); doBuild(); }
+    if (e.key === 'Tab' && !e.shiftKey) {
+      e.preventDefault();
+      const s = spec.selectionStart;
+      spec.setRangeText('   ', s, spec.selectionEnd, 'end');
+      renderGutter();
+    }
+  });
+  function gotoLine(n) {
+    const lines = spec.value.split('\n');
+    let start = 0;
+    for (let i = 0; i < n - 1 && i < lines.length; i++) start += lines[i].length + 1;
+    spec.focus();
+    spec.setSelectionRange(start, start + (lines[n - 1] || '').length);
+    const lh = parseFloat(getComputedStyle(spec).lineHeight) || 20;
+    spec.scrollTop = Math.max(0, (n - 4) * lh);
+  }
+
+  // ---------------------------------------------------------------- prompt
+  let promptText = null;
+  async function getPrompt() {
+    if (promptText === null) promptText = await (await fetch('/api/prompt')).text();
+    return promptText;
+  }
+  $('copy-prompt').addEventListener('click', async () => {
+    const t = await getPrompt();
+    try { await navigator.clipboard.writeText(t); $('prompt-status').textContent = `Copied (${t.length.toLocaleString()} characters). Add your use case at the end.`; }
+    catch { $('prompt').hidden = false; $('prompt').value = t; $('prompt').select(); $('prompt-status').textContent = 'Select all and copy the text below.'; }
+  });
+  $('toggle-prompt').addEventListener('click', async () => {
+    const box = $('prompt');
+    box.hidden = !box.hidden;
+    $('toggle-prompt').setAttribute('aria-expanded', String(!box.hidden));
+    $('toggle-prompt').textContent = box.hidden ? 'Show prompt' : 'Hide prompt';
+    if (!box.hidden && !box.value) box.value = await getPrompt();
+  });
+
+  // ---------------------------------------------------------------- build
+  async function doBuild() {
+    const btn = $('build');
+    btn.disabled = true; btn.textContent = 'Building…';
+    try {
+      const r = await fetch('/api/build', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ spec: spec.value }) });
+      last = await r.json();
+      if (last.spec && last.spec !== spec.value) { spec.value = last.spec; }
+      flowIdx = 0; selStep = null;
+      runIdx = longestRun(last.flows?.[0]);
+      if (tab === 'project' && !Object.keys(last.project || {}).length) tab = 'flowchart';
+      if (tab === 'screens' && !(last.screens || []).length) tab = 'flowchart';
+      if (screenIdx >= (last.screens || []).length) screenIdx = 0;
+      render();
+      verifyAll(last);
+    } catch (e) {
+      $('results').innerHTML = `<div class="fatal">Couldn't reach the backend: ${esc(e.message)}. Is <code>danta studio</code> still running?</div>`;
+    } finally { btn.disabled = false; btn.textContent = 'Build'; }
+  }
+  $('build').addEventListener('click', doBuild);
+
+  const LANGS = [['python', 'Python'], ['javascript', 'JavaScript'], ['java', 'Spring Boot']];
+
+  // Each project's own test suite runs after the build, one language at a time;
+  // results fill in as they arrive. A newer build makes older results irrelevant.
+  async function verifyAll(build) {
+    for (const [lang] of LANGS) {
+      const proj = (build.project || {})[lang];
+      if (!proj) continue;
+      proj.verification = { status: 'running' };
+      if (build === last) render();
+      try {
+        const r = await fetch('/api/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                                               body: JSON.stringify({ spec: build.spec, language: lang }) });
+        proj.verification = await r.json();
+      } catch (e) {
+        proj.verification = { status: 'not verified', detail: e.message, passed: 0, total: 0 };
+      }
+      if (build === last) render();
+    }
+  }
+
+  function renderIssues() {
+    const box = $('issues');
+    badLines = new Set((last.errors || []).map((e) => e.line));
+    const items = [
+      ...(last.errors || []).map((e) => ({ ...e, cls: '' })),
+      ...(last.warnings || []).map((e) => ({ ...e, cls: 'warning' })),
+      ...(last.intents || []).map((i) => ({ line: i.line, rule: 'intent', cls: 'intent',
+        message: `${i.step}.${i.field} is prose (“${i.text}”): it needs the logic model, or an exact expression in backquotes` })),
+    ].sort((a, b) => a.line - b.line);
+    box.innerHTML = items.map((e, k) => `<button class="issue ${e.cls}" data-k="${k}"><span class="ln">line ${e.line}</span>` +
+      `<span class="rule">${esc(e.rule)}</span><span>${esc(e.message)}</span></button>`).join('');
+    box.querySelectorAll('.issue').forEach((b) => b.addEventListener('click', () => gotoLine(items[+b.dataset.k].line)));
+    renderGutter();
+  }
+
+  // ---------------------------------------------------------------- results
+  function render() {
+    if (last.fatal) { $('results').innerHTML = `<div class="fatal">${esc(last.fatal)}</div>`; return; }
+    renderIssues();
+    const res = $('results');
+    if (!last.flows.length) {
+      res.innerHTML = `<div class="empty">${last.errors.length ? `Fix the ${last.errors.length} error(s) on the left to see the flow.` : 'No flows yet.'}</div>`;
+      return;
+    }
+    const f = last.flows[flowIdx];
+    const chips = [];
+    chips.push(last.errors.length ? `<span class="chip err">${last.errors.length} error(s)</span>` : `<span class="chip ok">compiled</span>`);
+    chips.push(`<span class="chip">${f.mode}</span>`, `<span class="chip">${f.steps.length} steps</span>`);
+    if (f.runs.length) chips.push(`<span class="chip ${f.coverage === 1 ? 'ok' : 'warn'}">${f.runs.length} test runs · ${Math.round(f.coverage * 100)}% of paths</span>`);
+    for (const [lang, label] of LANGS) {
+      const rep = (last.project || {})[lang]?.verification;
+      if (!rep) continue;
+      const cls = { verified: 'ok', failed: 'err', running: '', local: '' }[rep.status] ?? 'warn';
+      const text = rep.status === 'verified' ? `tests pass ${rep.passed}/${rep.total}` : rep.status === 'running' ? 'testing…'
+        : rep.status === 'local' ? 'tests run locally' : rep.status;
+      chips.push(`<span class="chip ${cls}">${label} ${text}</span>`);
+    }
+    const picker = last.flows.length > 1 ? `<select class="btn" id="flowpick">${last.flows.map((x, i) =>
+      `<option value="${i}" ${i === flowIdx ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}</select>` : `<span class="chip">${esc(f.name)}</span>`;
+    const tabs = [['flowchart', 'Flowchart'], ['runs', 'Test runs', f.runs.length],
+                  ...((last.screens || []).length ? [['screens', 'Screens', last.screens.length]] : []),
+                  ['project', 'Project', badge((last.project || {})[projLang]?.verification)], ['ir2', 'IR2']];
+    res.innerHTML = `<div class="summary"><span class="sys">${esc(last.system)}</span>${picker}${chips.join('')}</div>
+      ${last.description ? `<p class="desc">${esc(last.description)}</p>` : ''}
+      ${f.intent ? `<p class="desc"><b>Intent:</b> ${esc(f.intent)}</p>` : ''}
+      <nav class="tabs" role="tablist">${tabs.map(([k, n, b]) => `<button class="tab" role="tab" data-t="${k}" aria-selected="${k === tab}">${n}${b !== undefined && b !== '' ? ` <span class="badge">${b}</span>` : ''}</button>`).join('')}</nav>
+      <div class="pane" id="pane"></div>`;
+    res.querySelectorAll('.tab').forEach((b) => b.addEventListener('click', () => { tab = b.dataset.t; render(); }));
+    const fp = $('flowpick');
+    if (fp) fp.addEventListener('change', () => { flowIdx = +fp.value; runIdx = longestRun(last.flows[flowIdx]); selStep = null; render(); });
+    ({ flowchart: paneFlow, runs: paneRuns, screens: paneScreens, project: paneProject, ir2: paneIR })[tab](f);
+  }
+  // Open on the run that walks the most of the flow, so the chart isn't mostly greyed out.
+  function longestRun(f) {
+    if (!f || !f.runs || !f.runs.length) return 0;
+    return f.runs.reduce((best, r, i) => (r.path.length > f.runs[best].path.length ? i : best), 0);
+  }
+  const badge = (rep) => !rep ? '' : { verified: '✓', failed: '✗', running: '…', local: '' }[rep.status] ?? '?';
+
+  function blocked(f) { return f.blocked ? `<div class="blocked">${esc(f.blocked)}</div>` : ''; }
+
+  // ---------------------------------------------------------------- flowchart
+  function paneFlow(f) {
+    $('pane').innerHTML = `${blocked(f)}<div class="canvas"><div class="stage" id="stage"></div></div><div class="detail" id="detail"></div>
+      ${f.runs.length ? `<p class="hint" style="margin-top:8px">Highlighted: the path of test run <b>${esc(f.runs[runIdx].name)}</b>. Pick another on the Test runs tab.</p>` : ''}`;
+    draw(f);
+    select(f, selStep || (f.steps.find((s) => s.kind === 'compute') || f.steps[0]).id);
+  }
+
+  function kcolor(s) { return s.kind === 'end' ? (s.status === 'error' ? 'var(--err)' : 'var(--ok)') : `var(--${KC[s.kind]})`; }
+
+  function draw(f) {
+    const NODE_W = 196, GAP_X = 30, GAP_Y = 48, PAD = 24;
+    const stage = $('stage');
+    const els = {};
+    f.steps.forEach((s) => {
+      const b = document.createElement('button');
+      b.className = `node ${s.kind}`; b.dataset.step = s.id;
+      b.style.setProperty('--k', kcolor(s));
+      b.innerHTML = `<span class="k">${esc(s.sub)}</span><span class="l">${esc(s.label)}</span>`;
+      b.addEventListener('click', () => select(f, s.id));
+      stage.appendChild(b); els[s.id] = b;
+    });
+    const preds = {}; f.steps.forEach((s) => { preds[s.id] = []; });
+    f.edges.forEach((e) => preds[e.dst].push(e.src));
+    const depth = {}; f.order.forEach((id) => { depth[id] = preds[id].length ? Math.max(...preds[id].map((p) => depth[p] + 1)) : 0; });
+    const rank = Object.fromEntries(f.order.map((id, i) => [id, i]));
+    const L = []; f.order.forEach((id) => { (L[depth[id]] = L[depth[id]] || []).push(id); });
+    const pos = {}; let y = PAD;
+    L.forEach((ids, li) => {
+      const want = (id) => preds[id].length ? preds[id].reduce((a, p) => a + pos[p].cx, 0) / preds[id].length : 0;
+      ids.sort((a, b) => (want(a) - want(b)) || (rank[a] - rank[b]));
+      const total = ids.length * NODE_W + (ids.length - 1) * GAP_X;
+      const mean = li === 0 ? 0 : ids.reduce((a, id) => a + want(id), 0) / ids.length;
+      let x = mean - total / 2, h = 0;
+      ids.forEach((id) => { pos[id] = { x, y, cx: x + NODE_W / 2 }; h = Math.max(h, els[id].offsetHeight); x += NODE_W + GAP_X; });
+      y += h + GAP_Y;
+    });
+    const xs = Object.values(pos).map((p) => p.x);
+    const minX = Math.min(...xs), width = Math.max(...xs) + NODE_W - minX + PAD * 2, height = y - GAP_Y + PAD;
+    Object.entries(pos).forEach(([id, p]) => {
+      p.x = p.x - minX + PAD; p.cx = p.x + NODE_W / 2; p.h = els[id].offsetHeight;
+      els[id].style.left = `${p.x}px`; els[id].style.top = `${p.y}px`;
+    });
+    stage.style.width = `${width}px`; stage.style.height = `${height}px`;
+    const NS = 'http://www.w3.org/2000/svg', svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('width', width); svg.setAttribute('height', height);
+    const run = f.runs[runIdx];
+    const taken = new Set((run ? run.edges : []).map((e) => e.join('|')));
+    const outN = {}, outK = {};
+    f.edges.forEach((e) => { outN[e.src] = (outN[e.src] || 0) + 1; });
+    f.edges.forEach((e) => {
+      const a = pos[e.src], b = pos[e.dst];
+      const k = outK[e.src] = (outK[e.src] || 0) + 1;
+      const spread = outN[e.src] > 1 ? ((k - 1) / (outN[e.src] - 1) - 0.5) * 60 : 0;
+      const x1 = a.cx + spread, y1 = a.y + a.h, x2 = b.cx, y2 = b.y - 6, my = (y1 + y2) / 2;
+      const on = taken.has([e.src, e.dst, e.on].join('|'));
+      const p = document.createElementNS(NS, 'path');
+      p.setAttribute('d', `M${x1},${y1} C${x1},${my} ${x2},${my} ${x2},${y2}`);
+      p.setAttribute('class', `edge on-${e.on}${on ? ' taken' : ''}`); svg.appendChild(p);
+      const t = document.createElementNS(NS, 'path');
+      t.setAttribute('d', `M${x2 - 5},${y2 - 1} L${x2 + 5},${y2 - 1} L${x2},${y2 + 6} Z`);
+      t.setAttribute('class', `arrow${on ? ' taken' : ''}`); svg.appendChild(t);
+      if (e.on !== 'next') {
+        const lab = document.createElement('span');
+        lab.className = `elabel ${e.on === 'error' ? 'error' : ''}${on ? ' taken' : ''}`; lab.textContent = e.on;
+        const tt = 0.35, bx = (1 - tt) ** 3 * x1 + 3 * (1 - tt) ** 2 * tt * x1 + 3 * (1 - tt) * tt * tt * x2 + tt ** 3 * x2;
+        const by = (1 - tt) ** 3 * y1 + 3 * (1 - tt) ** 2 * tt * my + 3 * (1 - tt) * tt * tt * my + tt ** 3 * y2;
+        lab.style.left = `${bx}px`; lab.style.top = `${by}px`; stage.appendChild(lab);
+      }
+    });
+    stage.insertBefore(svg, stage.firstChild);
+    if (run) {
+      const seen = new Set(run.path);
+      Object.entries(els).forEach(([id, el]) => { el.classList.toggle('visited', seen.has(id)); el.classList.toggle('dim', !seen.has(id)); });
+    }
+  }
+
+  function select(f, id) {
+    selStep = id;
+    document.querySelectorAll('.node').forEach((n) => n.classList.toggle('sel', n.dataset.step === id));
+    const s = f.steps.find((x) => x.id === id);
+    if (!s) return;
+    const rows = s.logic.map(([k, e]) => `<tr><td class="f">${esc(k)}</td><td><code>${esc(e)}</code></td></tr>`).join('');
+    $('detail').innerHTML = `<div class="title"><strong>${esc(s.label)}</strong><span class="chip">${esc(s.sub)} · ${esc(s.id)}</span>
+      ${s.line ? `<button class="link" data-line="${s.line}">spec line ${s.line}</button>` : ''}</div>
+      ${rows ? `<div class="scroll-x"><table class="logic"><thead><tr><th>field</th><th>IR2 logic</th></tr></thead><tbody>${rows}</tbody></table></div>`
+             : '<p class="hint">No expressions: this step is fully defined by its kind and connections.</p>'}`;
+    const l = $('detail').querySelector('[data-line]'); if (l) l.addEventListener('click', () => gotoLine(+l.dataset.line));
+  }
+
+  // ---------------------------------------------------------------- runs
+  function paneRuns(f) {
+    if (!f.runs.length) { $('pane').innerHTML = blocked(f) || '<div class="empty">No test runs.</div>'; return; }
+    const r = f.runs[runIdx];
+    $('pane').innerHTML = `<p class="hint">Invented inputs and service behaviours, chosen until every path through the flow was taken (${Math.round(f.coverage * 100)}%). The generated code must reproduce every one.</p>
+      <div class="runs">${f.runs.map((x, i) => `<button class="run" data-i="${i}" aria-pressed="${i === runIdx}"><span class="n">${esc(x.name)}</span>
+        <span class="p">${esc(x.path.join(' → '))}</span><span class="pill ${x.status}">${x.status}</span></button>`).join('')}</div>
+      <dl class="kv"><dt>input</dt><dd>${esc(JSON.stringify(r.input))}</dd>
+        ${Object.keys(r.mocks).length ? `<dt>services</dt><dd>${esc(JSON.stringify(r.mocks))}</dd>` : ''}
+        <dt>effects</dt><dd>${r.effects.length ? `<ul>${r.effects.map((e) => `<li>${esc(e)}</li>`).join('')}</ul>` : 'none'}</dd>
+        <dt>result</dt><dd>${esc(r.status)}${r.response ? ` · ${esc(JSON.stringify(r.response))}` : ''}${r.error ? ` · ${esc(r.error)}` : ''}</dd></dl>`;
+    $('pane').querySelectorAll('.run').forEach((b) => b.addEventListener('click', () => { runIdx = +b.dataset.i; paneRuns(f); }));
+  }
+
+  // ---------------------------------------------------------------- project
+  // ---------------------------------------------------------------- screens
+  // A preview of the generated React app (web/), drawn from the screens the spec declares.
+  const screenPath = (sc) => '/' + sc.name.replaceAll('_', '-');
+  const screenFile = (sc) => sc.name.split('_').map((w) => w[0].toUpperCase() + w.slice(1)).join('') + '.jsx';
+
+  function previewControl(fl, label, bare) {
+    const lab = (html) => bare ? html : `<label>${esc(label)}${html}</label>`;
+    const ph = { email: 'name@example.com', date: '', list: 'separate with commas', money: '0.00' }[fl.widget] || '';
+    switch (fl.widget) {
+      case 'long text': return lab('<textarea rows="3"></textarea>');
+      case 'choice': return lab(`<select>${fl.choices.map((c) => `<option>${esc(String(c))}</option>`).join('')}</select>`);
+      case 'checkbox': return lab('<input type="checkbox">');
+      case 'generated': return lab(`<input readonly value="${esc(fl.name.replace(/_id$/, '').replaceAll('_', '').slice(0, 6).toUpperCase())}-4F7Q2A">`);
+      case 'number': return lab('<input type="number" value="0">');
+      case 'date': return lab('<input type="date">');
+      case 'email': return lab(`<input type="email" placeholder="${ph}">`);
+      default: return lab(`<input placeholder="${ph}">`);
+    }
+  }
+
+  function previewForm(sc) {
+    const fields = sc.fields.map((fl) => fl.widget !== 'rows' ? previewControl(fl, fl.label) :
+      `<div class="shot-rows"><div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px">${esc(fl.label)}</div>
+        <table><thead><tr>${fl.rows.map((r) => `<th>${esc(r.label)}</th>`).join('')}<th></th></tr></thead>
+        <tbody><tr>${fl.rows.map((r) => `<td>${previewControl(r, r.label, true)}</td>`).join('')}<td><span class="hint">Remove</span></td></tr></tbody></table>
+        <button type="button" class="shot-btn ghost" style="margin-top:6px">Add a row</button></div>`).join('');
+    return `<form class="shot-form" onsubmit="return false">${fields}<button type="button" class="shot-btn">${esc(sc.submit)}</button></form>`;
+  }
+
+  function sampleCell(c, i) {
+    return { money: (12.5 * i).toFixed(2),
+             number: String(42 * i), 'yes/no': i === 1 ? 'Yes' : 'No', date: `2026-09-2${i}` }[c.format] ?? `${c.label} ${i}`;
+  }
+
+  function previewList(sc) {
+    const rows = [1, 2].map((i) => `<tr>${sc.columns.map((c) => `<td class="${c.format === 'money' ? 'num' : ''}">${esc(sampleCell(c, i))}</td>`).join('')}
+      ${sc.actions.length ? `<td style="text-align:right">${sc.actions.map((a) => `<button type="button" class="shot-btn ghost">${esc(a.label)}</button>`).join(' ')}</td>` : ''}</tr>`).join('');
+    return `<table class="shot-table"><thead><tr>${sc.columns.map((c) => `<th class="${c.format === 'money' ? 'num' : ''}">${esc(c.label)}</th>`).join('')}${sc.actions.length ? '<th></th>' : ''}</tr></thead>
+      <tbody>${rows}</tbody></table><div class="shot-note">Sample rows. The app shows the real ${esc(sc.entity)} records.</div>`;
+  }
+
+  function describeScreen(sc) {
+    const screens = last.screens;
+    const title = (name) => esc((screens.find((x) => x.name === name) || { title: name }).title);
+    if (sc.kind === 'form') {
+      const after = [sc.message && `shows “${esc(sc.message)}”`, sc.go_to && `opens <b>${title(sc.go_to)}</b>`].filter(Boolean).join(', then ') || 'shows “Done.”';
+      return `<p>Submitting runs flow <b>${esc(sc.flow)}</b> (<code>${esc(sc.method)} ${esc(sc.path)}</code>) with every field above. On success it ${after}; if the flow refuses, it shows the flow's error and keeps what was typed.</p>`;
+    }
+    const where = Object.entries(sc.filters).map(([k, v]) => `${esc(k)} = ${esc(JSON.stringify(v))}`).join(' and ');
+    const acts = sc.actions.map((a) => `<li><b>${esc(a.label)}</b> runs flow <b>${esc(a.flow)}</b> (<code>${esc(a.method)} ${esc(a.path)}</code>) with the row's values, then reloads the list.</li>`).join('');
+    return `<p>Shows the <b>${esc(sc.entity)}</b> records${where ? ` where ${where}` : ''}, read from <code>GET /data/${esc(sc.entity)}</code>.</p>${acts ? `<ul>${acts}</ul>` : ''}`;
+  }
+
+  function paneScreens() {
+    const screens = last.screens, sc = screens[screenIdx];
+    const file = `${last.system}/web/src/screens/${screenFile(sc)}`;
+    const hasCode = Object.keys((last.project || {})[projLang]?.files || {}).includes(file);
+    $('pane').innerHTML = `<p class="hint" style="margin:0 0 10px">A preview of the React app generated in <code>web/</code> of every project (Python, JavaScript and Spring Boot alike). Click a screen in its menu.</p>
+      <div class="shot"><div class="shot-bar"><i></i><i></i><i></i><span>localhost:3000${esc(screenPath(sc))}</span></div>
+        <div class="shot-app"><nav class="shot-nav"><b>${esc(last.system)}</b>${screens.map((x, i) => `<button data-i="${i}" aria-current="${i === screenIdx}">${esc(x.title)}</button>`).join('')}</nav>
+          <div class="shot-main"><h3>${esc(sc.title)}</h3>${sc.kind === 'form' ? previewForm(sc) : previewList(sc)}</div></div></div>
+      <div class="detail" style="margin-top:12px">${describeScreen(sc)}
+        ${hasCode ? `<p><button class="btn" id="screen-code">See the code: web/src/screens/${esc(screenFile(sc))}</button></p>` : ''}
+        <p class="hint">Run it: <code>docker compose up --build</code> in the project, then open http://localhost:3000. Or <code>cd web &amp;&amp; npm install &amp;&amp; npm run dev</code> next to a running API.</p></div>`;
+    $('pane').querySelectorAll('.shot-nav button').forEach((b) => b.addEventListener('click', () => { screenIdx = +b.dataset.i; paneScreens(); }));
+    const code = $('screen-code');
+    if (code) code.addEventListener('click', () => { projFile = file; tab = 'project'; render(); });
+  }
+
+  function paneProject(f) {
+    const proj = (last.project || {})[projLang];
+    if (!proj) {
+      $('pane').innerHTML = blocked(f) || '<div class="empty">No project yet: build a spec without errors or prose values.</div>';
+      return;
+    }
+    const paths = Object.keys(proj.files).sort();
+    if (!projFile || !(projFile in proj.files)) projFile = paths.find((p) => /\/flows\/[^/]+\.(py|js|java)$/.test(p) && !/(__init__|index)/.test(p)) || paths[0];
+    const rep = proj.verification || { status: 'running' };
+    const runner = { python: 'python -m unittest', javascript: 'node --test', java: 'mvn test' }[projLang];
+    const verdict = rep.status === 'verified'
+      ? `<div class="verdict verified"><b>Project tests pass: ${rep.passed}/${rep.total}.</b> The generated test suite was run inside the project with <code>${runner}</code>. It replays every test run, so keep it passing when you edit.</div>`
+      : rep.status === 'running' ? `<div class="verdict notverified">Running the project's tests with <code>${runner}</code>…</div>`
+      : rep.status === 'local' ? `<div class="verdict notverified"><b>Run the tests on your machine.</b> This page builds in your browser, which can't run Node, Maven or a JDK. Download the .zip and, in the project folder, run <code>${esc(rep.command)}</code>, or <code>docker compose up --build</code> for the whole stack. The generated tests replay every test run above.</div>`
+      : rep.status === 'failed' ? `<div class="verdict mismatch"><b>Project tests failed</b> (${rep.passed}/${rep.total}).<pre class="code" style="margin-top:8px">${esc(rep.detail)}</pre></div>`
+      : `<div class="verdict notverified"><b>Not verified:</b> ${esc(rep.detail)}.</div>`;
+    const fmt = proj.format || {};
+    const fmtNote = fmt.status === 'formatted' ? `formatted with ${esc(fmt.tool)}` : `not formatted (${esc(fmt.detail || 'no formatter')})`;
+    let tree = '', lastDir = null;
+    for (const p of paths) {
+      const i = p.lastIndexOf('/'), dir = p.slice(0, i), name = p.slice(i + 1);
+      if (dir !== lastDir) { tree += `<div class="dir">${esc(dir)}/</div>`; lastDir = dir; }
+      tree += `<button data-p="${esc(p)}" aria-current="${p === projFile}">${esc(name)}</button>`;
+    }
+    $('pane').innerHTML = `${verdict}
+      <div class="row" style="margin-bottom:10px">
+        <div class="seg" role="group" aria-label="Language">
+          <button data-l="python" aria-pressed="${projLang === 'python'}">Python</button>
+          <button data-l="javascript" aria-pressed="${projLang === 'javascript'}">JavaScript</button>
+          <button data-l="java" aria-pressed="${projLang === 'java'}">Spring Boot</button>
+        </div>
+        <button class="btn primary" id="dl-proj">Download .zip</button>
+        <span class="hint">${paths.length} files · ${fmtNote}</span><span class="hint" id="proj-status"></span>
+      </div>
+      <div class="proj"><nav class="tree" aria-label="Project files">${tree}</nav>
+        <div><div class="hint" style="margin-bottom:6px"><code>${esc(projFile)}</code></div><pre class="code">${esc(proj.files[projFile])}</pre></div></div>`;
+    $('pane').querySelectorAll('.tree button').forEach((b) => b.addEventListener('click', () => { projFile = b.dataset.p; paneProject(f); }));
+    $('pane').querySelectorAll('.seg button').forEach((b) => b.addEventListener('click', () => { projLang = b.dataset.l; projFile = null; render(); }));
+    $('dl-proj').addEventListener('click', async () => {
+      $('proj-status').textContent = 'Preparing…';
+      const r = await fetch('/api/project', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                                              body: JSON.stringify({ spec: spec.value, language: projLang }) });
+      if (!r.ok) { $('proj-status').textContent = 'Build the spec without errors first.'; return; }
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(await r.blob());
+      a.download = `${last.system}-${projLang}.zip`;
+      a.click();
+      $('proj-status').textContent = 'Downloaded.';
+    });
+  }
+
+  function paneIR(f) {
+    const text = JSON.stringify(f.ir2, null, 2);
+    $('pane').innerHTML = `<p class="hint">The flow in IR2, the intermediate form every language is compiled from.</p><pre class="code">${esc(text)}</pre>`;
+  }
+
+  // ---------------------------------------------------------------- start
+  (async () => {
+    examples = await (await fetch('/api/examples')).json();
+    $('examples').insertAdjacentHTML('beforeend', examples.map((e, i) => `<option value="${i}">${esc(e.name)}</option>`).join(''));
+    $('examples').addEventListener('change', () => {
+      const i = $('examples').value; if (i === '') return;
+      spec.value = examples[+i].text; $('examples').value = ''; renderGutter(); doBuild();
+    });
+    spec.value = examples[0].text;
+    renderGutter();
+    doBuild();
+  })();
+
+  // Docs toggle — can't use `hidden` on main because `main { display: grid }` overrides UA [hidden]
+  let docsShown = false;
+  const docsView = document.getElementById('docs-view');
+  const studioMain = document.querySelector('main');
+  docsView.style.display = 'none';    // start hidden; main starts as grid (its default)
+  $('docs-toggle').addEventListener('click', () => {
+    docsShown = !docsShown;
+    docsView.style.display = docsShown ? 'block' : 'none';
+    studioMain.style.display = docsShown ? 'none' : 'grid';
+    $('docs-toggle').setAttribute('aria-pressed', String(docsShown));
+    $('docs-toggle').textContent = docsShown ? '← Studio' : 'Docs';
+  });
+
+  // Skill file download from within docs view
+  document.getElementById('docs-dl-skill').addEventListener('click', () => {
+    const a = document.createElement('a');
+    a.href = 'danta-skill.md';
+    a.download = 'danta-skill.md';
+    a.click();
+  });
+})();
+</script>
+</body>
+</html>

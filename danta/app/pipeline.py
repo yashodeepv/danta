@@ -22,6 +22,7 @@ from danta.ir2.expr import ArrLoop, Cmp, Const, Invalid, Pluck, Ref, Str, childr
 from danta.ir2.io import dump_flow
 from danta.ir2.sexpr import emit
 from danta.sim import run, summary
+from danta.sim.runner import SimError
 from danta.spec import compile_spec
 
 
@@ -191,11 +192,16 @@ def build(text, seed=0):
             all_scenarios[flow.name] = scenarios
             item['coverage'] = cov
             for name, sc in scenarios.items():
-                r = run(flow, sc['input'], sc.get('mocks', {}))
-                item['runs'].append({'name': name, 'input': sc['input'], 'mocks': sc.get('mocks', {}),
-                                     'status': r.status, 'response': r.response, 'error': r.error,
-                                     'path': r.path(), 'edges': [list(e) for e in r.edges],
-                                     'effects': [summary(e) for e in r.effects]})
+                try:
+                    r = run(flow, sc['input'], sc.get('mocks', {}))
+                    item['runs'].append({'name': name, 'input': sc['input'], 'mocks': sc.get('mocks', {}),
+                                         'status': r.status, 'response': r.response, 'error': r.error,
+                                         'path': r.path(), 'edges': [list(e) for e in r.edges],
+                                         'effects': [summary(e) for e in r.effects]})
+                except SimError as e:
+                    item['runs'].append({'name': name, 'input': sc['input'], 'mocks': sc.get('mocks', {}),
+                                         'status': 'skipped', 'response': {}, 'error': str(e),
+                                         'path': [], 'edges': [], 'effects': []})
         out['flows'].append(item)
     out['screens'] = [dataclasses.asdict(s) for s in res.screens]
     out['project'] = {}

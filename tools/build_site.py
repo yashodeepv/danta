@@ -99,12 +99,16 @@ def bundle():
     return buf.getvalue()
 
 
-def page():
+def landing():
     with open(os.path.join(ROOT, 'danta', 'app', 'static', 'index.html')) as f:
+        return f.read()
+
+
+def studio():
+    with open(os.path.join(ROOT, 'danta', 'app', 'static', 'studio.html')) as f:
         html = f.read()
-    main = html.index('<script>\n(function () {')
-    html = html[:main] + LOADER.replace('__PYODIDE__', PYODIDE) + html[main:]
-    return html.replace('<span class="sub">Spec Studio</span>', '<span class="sub">Spec Studio · in your browser</span>', 1)
+    pos = html.index('<script>\n(function () {')
+    return html[:pos] + LOADER.replace('__PYODIDE__', PYODIDE) + html[pos:]
 
 
 def main():
@@ -113,7 +117,9 @@ def main():
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
     with open(os.path.join(a.out, 'index.html'), 'w') as f:
-        f.write(page())
+        f.write(landing())
+    with open(os.path.join(a.out, 'studio.html'), 'w') as f:
+        f.write(studio())
     with open(os.path.join(a.out, 'danta.zip'), 'wb') as f:
         f.write(bundle())
     open(os.path.join(a.out, '.nojekyll'), 'w').close()
@@ -122,7 +128,7 @@ def main():
     with open(skill_src) as f:
         with open(skill_dst, 'w') as g:
             g.write(f.read())
-    print(f'wrote {a.out}/index.html, {a.out}/danta.zip and {a.out}/danta-skill.md')
+    print(f'wrote {a.out}/index.html, {a.out}/studio.html, {a.out}/danta.zip and {a.out}/danta-skill.md')
 
 
 if __name__ == '__main__':
