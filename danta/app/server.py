@@ -9,28 +9,17 @@ Binds to 127.0.0.1 only: it runs code generation and simulation on
 whatever is pasted in, and is meant for the person at this machine.
 """
 
-import glob
 import json
 import os
 import traceback
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from danta.app.pipeline import build, project_zip, verify_language
-from danta.app.prompt import build_prompt, example_spec
+from danta.app.prompt import build_prompt, examples
 
 STATIC = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
-EXAMPLES = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'spec', 'examples')
 MAX_BODY = 1_000_000
 
-
-def examples():
-    out = [{'name': 'leave_requests (all exact)', 'text': example_spec()}]
-    for path in sorted(glob.glob(os.path.join(EXAMPLES, '*.spec.md'))):
-        with open(path) as f:
-            text = f.read()
-            name = os.path.basename(path)[:-len('.spec.md')]
-            out.append({'name': name + (' (with screens: web app)' if '## Screen:' in text else ''), 'text': text})
-    return out
 
 
 class Handler(BaseHTTPRequestHandler):

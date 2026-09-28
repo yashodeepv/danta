@@ -452,8 +452,9 @@ details.llm[open] summary { margin-bottom: 10px; }
     for (const [lang, label] of LANGS) {
       const rep = (last.project || {})[lang]?.verification;
       if (!rep) continue;
-      const cls = { verified: 'ok', failed: 'err', running: '' }[rep.status] ?? 'warn';
-      const text = rep.status === 'verified' ? `tests pass ${rep.passed}/${rep.total}` : rep.status === 'running' ? 'testing…' : rep.status;
+      const cls = { verified: 'ok', failed: 'err', running: '', local: '' }[rep.status] ?? 'warn';
+      const text = rep.status === 'verified' ? `tests pass ${rep.passed}/${rep.total}` : rep.status === 'running' ? 'testing…'
+        : rep.status === 'local' ? 'tests run locally' : rep.status;
       chips.push(`<span class="chip ${cls}">${label} ${text}</span>`);
     }
     const picker = last.flows.length > 1 ? `<select class="btn" id="flowpick">${last.flows.map((x, i) =>
@@ -476,7 +477,7 @@ details.llm[open] summary { margin-bottom: 10px; }
     if (!f || !f.runs || !f.runs.length) return 0;
     return f.runs.reduce((best, r, i) => (r.path.length > f.runs[best].path.length ? i : best), 0);
   }
-  const badge = (rep) => !rep ? '' : { verified: '✓', failed: '✗', running: '…' }[rep.status] ?? '?';
+  const badge = (rep) => !rep ? '' : { verified: '✓', failed: '✗', running: '…', local: '' }[rep.status] ?? '?';
 
   function blocked(f) { return f.blocked ? `<div class="blocked">${esc(f.blocked)}</div>` : ''; }
 
@@ -667,6 +668,7 @@ details.llm[open] summary { margin-bottom: 10px; }
     const verdict = rep.status === 'verified'
       ? `<div class="verdict verified"><b>Project tests pass: ${rep.passed}/${rep.total}.</b> The generated test suite was run inside the project with <code>${runner}</code>. It replays every test run, so keep it passing when you edit.</div>`
       : rep.status === 'running' ? `<div class="verdict notverified">Running the project's tests with <code>${runner}</code>…</div>`
+      : rep.status === 'local' ? `<div class="verdict notverified"><b>Run the tests on your machine.</b> This page builds in your browser, which can't run Node, Maven or a JDK. Download the .zip and, in the project folder, run <code>${esc(rep.command)}</code>, or <code>docker compose up --build</code> for the whole stack. The generated tests replay every test run above.</div>`
       : rep.status === 'failed' ? `<div class="verdict mismatch"><b>Project tests failed</b> (${rep.passed}/${rep.total}).<pre class="code" style="margin-top:8px">${esc(rep.detail)}</pre></div>`
       : `<div class="verdict notverified"><b>Not verified:</b> ${esc(rep.detail)}.</div>`;
     const fmt = proj.format || {};

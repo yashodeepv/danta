@@ -61,6 +61,18 @@ def screens_example():
         return f.read()
 
 
+def examples():
+    """The example specs Studio offers, the prompt's own example first."""
+    import glob
+    out = [{'name': 'leave_requests (all exact)', 'text': example_spec()}]
+    for path in sorted(glob.glob(os.path.join(SPEC_DIR, 'examples', '*.spec.md'))):
+        with open(path) as f:
+            text = f.read()
+        name = os.path.basename(path)[:-len('.spec.md')]
+        out.append({'name': name + (' (with screens: web app)' if '## Screen:' in text else ''), 'text': text})
+    return out
+
+
 def build_prompt():
     with open(os.path.join(SPEC_DIR, 'LANGUAGE.md')) as f:
         language = f.read()
