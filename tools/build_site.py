@@ -51,7 +51,7 @@ LOADER = r'''<script>
   const json = (text, status = 200) => new Response(text, { status, headers: { 'Content-Type': 'application/json' } });
   const realFetch = window.fetch.bind(window);
   window.fetch = async (url, init = {}) => {
-    const path = typeof url === 'string' ? url : url.url;
+    const path = typeof url === 'string' ? url : (url.url || url.href || String(url));
     if (!path.startsWith('/api/')) return realFetch(url, init);
     const web = await ready;
     const body = init.body ? JSON.parse(init.body) : {};
@@ -117,7 +117,12 @@ def main():
     with open(os.path.join(a.out, 'danta.zip'), 'wb') as f:
         f.write(bundle())
     open(os.path.join(a.out, '.nojekyll'), 'w').close()
-    print(f'wrote {a.out}/index.html and {a.out}/danta.zip')
+    skill_src = os.path.join(ROOT, 'tools', 'danta-skill.md')
+    skill_dst = os.path.join(a.out, 'danta-skill.md')
+    with open(skill_src) as f:
+        with open(skill_dst, 'w') as g:
+            g.write(f.read())
+    print(f'wrote {a.out}/index.html, {a.out}/danta.zip and {a.out}/danta-skill.md')
 
 
 if __name__ == '__main__':

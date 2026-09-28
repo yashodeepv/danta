@@ -246,6 +246,38 @@ details.llm summary .chev { margin-left: auto; color: var(--muted); transition: 
 details.llm[open] summary .chev { transform: rotate(90deg); }
 details.llm[open] summary { margin-bottom: 10px; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* ---------- docs view */
+#docs-view { background: var(--paper); }
+.docs-wrap { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 57px); }
+.docs-nav { position: sticky; top: 57px; height: calc(100vh - 57px); overflow-y: auto; padding: 20px 12px;
+  border-right: 1px solid var(--line); background: var(--surface); }
+.docs-nav-section { margin-bottom: 20px; }
+.docs-nav-label { font: 10px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--faint); padding: 0 8px 8px; display: block; }
+.docs-nav a { display: block; padding: 5px 8px; color: var(--muted); text-decoration: none; border-radius: 6px; font-size: 13px; font-weight: 500; }
+.docs-nav a:hover { color: var(--ink); background: var(--sunk); }
+.docs-nav a.current { color: var(--accent); background: var(--accent-soft); }
+.docs-body { max-width: 820px; padding: 40px 52px 80px; }
+.docs-body h1 { font-size: 28px; letter-spacing: -.03em; margin: 0 0 8px; }
+.docs-body .tagline { color: var(--muted); margin: 0 0 24px; font-size: 15px; max-width: 68ch; line-height: 1.6; }
+.docs-dl { display: inline-flex; align-items: center; gap: 8px; padding: 9px 18px; background: var(--accent); color: var(--accent-ink); border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 13.5px; margin-bottom: 36px; border: none; cursor: pointer; font: 600 13.5px var(--sans); transition: filter .15s; }
+.docs-dl:hover { filter: brightness(1.08); }
+.docs-body h2 { font-size: 20px; letter-spacing: -.02em; margin: 52px 0 12px; padding-top: 52px; border-top: 1px solid var(--line); scroll-margin-top: 72px; }
+.docs-body h2.first { border-top: none; margin-top: 0; padding-top: 0; }
+.docs-body h3 { font-size: 14.5px; font-weight: 650; margin: 28px 0 6px; color: var(--ink); scroll-margin-top: 72px; }
+.docs-body p { color: var(--muted); max-width: 70ch; margin: 0 0 12px; line-height: 1.65; }
+.docs-body p b, .docs-body p strong, .docs-body li b, .docs-body li strong { color: var(--ink); }
+.docs-body ul, .docs-body ol { color: var(--muted); padding-left: 18px; margin: 0 0 14px; }
+.docs-body li { margin-bottom: 5px; line-height: 1.65; max-width: 70ch; }
+.docs-body pre { margin: 8px 0 18px; padding: 16px 18px; background: var(--sunk); border: 1px solid var(--line); border-radius: 10px; font: 12.5px/1.65 var(--mono); overflow-x: auto; tab-size: 3; white-space: pre; }
+.docs-body table { border-collapse: collapse; width: 100%; margin: 8px 0 18px; font-size: 13px; }
+.docs-body th { text-align: left; font: 10px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 4px 16px 8px 0; border-bottom: 1px solid var(--line); }
+.docs-body td { padding: 8px 16px 8px 0; border-bottom: 1px solid var(--line); color: var(--muted); vertical-align: top; line-height: 1.5; }
+.docs-body td:first-child { font: 12.5px var(--mono); color: var(--ink); white-space: nowrap; }
+.docs-body .syntax { font: 12.5px/1.6 var(--mono); padding: 10px 14px; background: var(--raised); border: 1px solid var(--line-strong); border-radius: 8px; margin: 0 0 10px; overflow-x: auto; white-space: pre; }
+.btn-docs { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line-strong); background: var(--raised); border-radius: 8px; padding: 7px 14px; cursor: pointer; font-weight: 500; font: 500 14px var(--sans); transition: border-color .15s; color: var(--ink); }
+.btn-docs:hover { border-color: var(--accent); }
+.btn-docs[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
 </style>
 </head>
 <body>
@@ -261,6 +293,7 @@ details.llm[open] summary { margin-bottom: 10px; }
   <div class="steps" aria-label="How to use">
     <span><b>1</b>Copy the prompt</span><i></i><span><b>2</b>Describe your use case to an LLM</span><i></i><span><b>3</b>Paste the spec &amp; build</span>
   </div>
+  <button class="btn-docs" id="docs-toggle" aria-pressed="false">Docs</button>
   <div class="theme" role="group" aria-label="Colour theme">
     <button data-theme-set="system" title="Match the system" aria-label="System theme">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></button>
@@ -279,6 +312,7 @@ details.llm[open] summary { margin-bottom: 10px; }
       <div class="row">
         <button class="btn primary" id="copy-prompt">Copy prompt</button>
         <button class="btn" id="toggle-prompt" aria-expanded="false">Show prompt</button>
+        <a class="btn" id="dl-skill" href="danta-skill.md" download="danta-skill.md">↓ Skill file</a>
         <span class="hint" id="prompt-status"></span>
       </div>
       <textarea class="prompt-box" id="prompt" readonly hidden aria-label="LLM prompt"></textarea>
@@ -305,6 +339,431 @@ details.llm[open] summary { margin-bottom: 10px; }
     <section class="card" id="results"><div class="empty">Building…</div></section>
   </div>
 </main>
+
+<!-- ================================================================ DOCS VIEW -->
+<div id="docs-view">
+<div class="docs-wrap">
+
+<nav class="docs-nav" aria-label="Documentation">
+  <div class="docs-nav-section">
+    <span class="docs-nav-label">Grammar</span>
+    <a href="#doc-overview">Overview</a>
+    <a href="#doc-header">Spec Header</a>
+    <a href="#doc-constants">Constants</a>
+    <a href="#doc-entities">Entities</a>
+    <a href="#doc-services">Services</a>
+    <a href="#doc-flows">Flows</a>
+  </div>
+  <div class="docs-nav-section">
+    <span class="docs-nav-label">Step Types</span>
+    <a href="#doc-validate">Validate</a>
+    <a href="#doc-compute">Compute</a>
+    <a href="#doc-call">Call</a>
+    <a href="#doc-query">Query</a>
+    <a href="#doc-publish">Publish</a>
+    <a href="#doc-if">If</a>
+    <a href="#doc-parallel">In parallel</a>
+    <a href="#doc-persist">Save / Update / Delete</a>
+    <a href="#doc-notify">Notifications</a>
+    <a href="#doc-respond">Respond with</a>
+    <a href="#doc-stop">Stop</a>
+  </div>
+  <div class="docs-nav-section">
+    <span class="docs-nav-label">Reference</span>
+    <a href="#doc-expressions">Expressions</a>
+    <a href="#doc-types">Types</a>
+    <a href="#doc-screens">Screens</a>
+  </div>
+</nav>
+
+<article class="docs-body">
+  <h1>Danta Grammar Reference</h1>
+  <p class="tagline">A Danta spec is a plain-text Markdown file that compiles deterministically to Python, JavaScript, and Java. This reference covers every keyword and construct the compiler recognises.</p>
+  <button class="docs-dl" id="docs-dl-skill">↓ Download skill file — paste into any LLM to write specs</button>
+
+  <!-- OVERVIEW -->
+  <h2 class="first" id="doc-overview">Overview</h2>
+  <p>The compiler reads the file in one pass: layout first (which section each line belongs to, step nesting, numbering), then semantics (types, name resolution, IR2 validity). Every error is reported against the spec line that caused it.</p>
+  <p><strong>Sections, in fixed order:</strong></p>
+  <ol>
+    <li><code>Spec: danta/0.1</code> — version line, always first</li>
+    <li><code># System: &lt;name&gt;</code> — system declaration + description</li>
+    <li><code>## Constants</code> — named values <em>(optional)</em></li>
+    <li><code>## Entities</code> — data shapes <em>(optional)</em></li>
+    <li><code>## Services</code> — external service signatures <em>(optional)</em></li>
+    <li><code>## Flow: &lt;name&gt;</code> — one or more flows</li>
+    <li><code>## Screen: &lt;name&gt;</code> — UI screens <em>(optional, after flows)</em></li>
+  </ol>
+  <p>Constants, Entities, and Services must all appear before the first <code>## Flow:</code>. Lines starting with <code>&gt;</code> are ignored anywhere — use them for inline comments.</p>
+
+  <!-- SPEC HEADER -->
+  <h2 id="doc-header">Spec Header</h2>
+  <p>Every spec starts with two mandatory declarations.</p>
+  <h3>Version line</h3>
+  <p>Must be the very first non-blank line:</p>
+  <pre>Spec: danta/0.1</pre>
+  <h3>System declaration</h3>
+  <pre># System: shop-orders
+Takes orders over HTTP, charges them and confirms them.</pre>
+  <table>
+    <thead><tr><th>Element</th><th>Pattern</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><code># System: &lt;name&gt;</code></td><td><code>[a-z][a-z0-9_-]*</code></td><td>Lowercase, hyphens allowed</td></tr>
+      <tr><td>Description</td><td>free prose</td><td>Lines after the heading until the next <code>##</code>; concatenated into one string</td></tr>
+    </tbody>
+  </table>
+  <p>A spec with no <code># System:</code> heading, or with no <code>## Flow:</code>, is an error.</p>
+
+  <!-- CONSTANTS -->
+  <h2 id="doc-constants">Constants</h2>
+  <p>Named values referenced by name in any value slot across all flows. Each constant is one <code>-&nbsp;</code> line:</p>
+  <pre>## Constants
+- LARGE_ORDER = 100000
+- LATE_DAYS = 30
+- SALES_CHANNEL = "#sales"
+- ACTIVE = true</pre>
+  <table>
+    <thead><tr><th>Part</th><th>Rule</th></tr></thead>
+    <tbody>
+      <tr><td>Name</td><td><code>UPPER_SNAKE_CASE</code> — <code>[A-Z][A-Z0-9_]*</code></td></tr>
+      <tr><td>Value</td><td>Integer, <code>"double-quoted string"</code>, or <code>true</code> / <code>false</code></td></tr>
+    </tbody>
+  </table>
+  <p>Each name must be unique. No expressions — literals only.</p>
+
+  <!-- ENTITIES -->
+  <h2 id="doc-entities">Entities</h2>
+  <p>Persistent data shapes that flows can <a href="#doc-query">Query</a>, <a href="#doc-persist">Save, Update, and Delete</a>. Each entity is one <code>-&nbsp;</code> line:</p>
+  <pre>## Entities
+- order: order_id str, total int, charge_id str, status str
+- invoice: invoice_id str, customer_email str, amount int, days_late int, status str</pre>
+  <h3>Field types</h3>
+  <table>
+    <thead><tr><th>Type</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><code>int</code></td><td>32-bit signed integer</td></tr>
+      <tr><td><code>str</code></td><td>Unicode string</td></tr>
+      <tr><td><code>bool</code></td><td><code>true</code> or <code>false</code></td></tr>
+      <tr><td><code>list of T</code></td><td>List of another type, e.g. <code>list of int</code>, <code>list of (sku str, amount int)</code></td></tr>
+      <tr><td><code>(f1 T1, f2 T2, ...)</code></td><td>Inline record</td></tr>
+      <tr><td><code>&lt;entity name&gt;</code></td><td>Another declared entity used as a nested type</td></tr>
+    </tbody>
+  </table>
+  <ul>
+    <li>Entity name: <code>[a-z][a-z0-9_]*]</code> — must be unique.</li>
+    <li>Field names must be unique within the entity.</li>
+    <li>The <strong>first field is the key</strong> — the only field required by <code>Delete</code>.</li>
+    <li><code>Save</code> and <code>Update</code> require every field.</li>
+  </ul>
+
+  <!-- SERVICES -->
+  <h2 id="doc-services">Services</h2>
+  <p>External operations a flow can <a href="#doc-call">Call</a>. Each service is one <code>-&nbsp;</code> line with a signature:</p>
+  <pre>## Services
+- payments.charge(order_id str, amount int) -> (charge_id str, status str)
+- inventory.reserve(sku str, qty int) -> (reserved bool)</pre>
+  <p><strong>Syntax:</strong> <code>- &lt;service&gt;.&lt;operation&gt;(&lt;params&gt;) -&gt; (&lt;outputs&gt;)</code></p>
+  <ul>
+    <li><code>service</code> and <code>operation</code>: <code>[a-z][a-z0-9_]*</code></li>
+    <li>Params and outputs: comma-separated <code>field type</code> pairs, same types as Entities.</li>
+    <li>A service with multiple operations appears on separate lines.</li>
+    <li>Each <code>service.operation</code> pair must be unique.</li>
+  </ul>
+
+  <!-- FLOWS -->
+  <h2 id="doc-flows">Flows</h2>
+  <p>A flow is the unit of compiled logic. Each starts with a <code>## Flow:</code> heading followed by four header fields, then numbered steps.</p>
+  <pre>## Flow: order_checkout
+Intent: Reject empty orders, price the order, charge it, then confirm and save it.
+Trigger: POST /orders with order_id str, customer_email str, tier str, items list of (sku str, amount int)
+Mode: sync
+Steps:
+1. ...</pre>
+  <p><strong>Flow name:</strong> <code>[a-z][a-z0-9_]*</code> — unique across the spec.</p>
+  <h3>Intent</h3>
+  <p>Free prose describing the flow's purpose. Not compiled — shown in the Studio and stored as metadata.</p>
+  <h3>Trigger</h3>
+  <table>
+    <thead><tr><th>Form</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td>HTTP</td><td><code>POST /orders with order_id str, amount int</code></td></tr>
+      <tr><td>Event</td><td><code>event payment_received with invoice_id str, amount int</code></td></tr>
+      <tr><td>Schedule</td><td><code>schedule "0 2 * * *" with run_date str</code></td></tr>
+      <tr><td>Topic</td><td><code>topic invoice.reminder with invoice_id str</code></td></tr>
+    </tbody>
+  </table>
+  <ul>
+    <li>HTTP methods: <code>GET</code>, <code>POST</code>, <code>PUT</code>, <code>DELETE</code>. Path starts with <code>/</code>.</li>
+    <li><code>with &lt;fields&gt;</code> is optional when the trigger carries no payload.</li>
+    <li>Payload fields are accessed as <code>input.&lt;field&gt;</code>, or just <code>&lt;field&gt;</code> when unambiguous.</li>
+  </ul>
+  <h3>Mode</h3>
+  <ul>
+    <li><code>sync</code> — the trigger waits for the flow; only valid for HTTP. Use with <code>Respond with</code>.</li>
+    <li><code>async</code> — fire and forget; required for <code>schedule</code>, <code>event</code>, and <code>topic</code>.</li>
+  </ul>
+  <h3>Steps</h3>
+  <p>The <code>Steps:</code> line ends the header. What follows is a numbered list (<code>1.</code>, <code>2.</code>, ...). Sub-steps under <code>If</code> or <code>In parallel</code> are lettered (<code>a.</code>, <code>b.</code>, ...). Numbering must be sequential — gaps are an error.</p>
+  <p>An optional title goes in <code>[square brackets]</code> before the keyword: <code>1. [Check items] Validate: ...</code>. Steps can continue onto the next line if indented. The <code>Tab</code> key in the editor inserts three spaces.</p>
+
+  <!-- VALIDATE -->
+  <h2 id="doc-validate">Validate</h2>
+  <p>Checks a condition and stops the flow if it fails.</p>
+  <div class="syntax">Validate: &lt;condition&gt;. Otherwise stop with error "&lt;msg&gt;" [, responding with &lt;fields&gt;]
+Validate: &lt;condition&gt;. Otherwise fail with "&lt;msg&gt;"</div>
+  <pre>1. [Has items?] Validate: `len(items) > 0`. Otherwise stop with error "order has no items".
+2. Validate: `amount > 0`. Otherwise stop with error "bad amount", responding with order_id.
+3. Validate: `active`. Otherwise fail with "account is inactive".</pre>
+  <ul>
+    <li><code>Otherwise stop</code> — sync. Sends an error response with <code>reason</code> field.</li>
+    <li><code>responding with order_id, total</code> — adds extra fields alongside <code>reason</code>.</li>
+    <li><code>Otherwise fail</code> — async variant; no response body.</li>
+  </ul>
+
+  <!-- COMPUTE -->
+  <h2 id="doc-compute">Compute</h2>
+  <p>Assigns named computed values accessible later as <code>&lt;name&gt;.&lt;var&gt;</code>.</p>
+  <div class="syntax">Compute &lt;name&gt;:
+   - &lt;var&gt;: &lt;value&gt;
+   - &lt;var&gt;: &lt;value&gt;</div>
+  <pre>2. [Price it] Compute pricing:
+   - subtotal: `sum(items.amount)`
+   - discount: `subtotal / 10 if tier == "gold" else 0`
+   - total: `subtotal - discount`</pre>
+  <ul>
+    <li>Name must be unique. Variables computed in declaration order; later ones can reference earlier ones.</li>
+    <li>Access results as <code>pricing.subtotal</code>, <code>pricing.total</code>, etc.</li>
+    <li>A Compute step with no <code>-&nbsp;</code> lines is an error.</li>
+  </ul>
+
+  <!-- CALL -->
+  <h2 id="doc-call">Call</h2>
+  <p>Invokes an external service operation declared under <code>## Services</code>.</p>
+  <div class="syntax">Call &lt;service&gt;.&lt;op&gt; [as &lt;name&gt;] [with &lt;args&gt;] [. Retry N time(s).] [. On failure stop with error "&lt;msg&gt;" [, responding with &lt;fields&gt;].]</div>
+  <pre>3. [Charge] Call payments.charge with order_id, amount = pricing.total. Retry 2 times. On failure stop with error "payment failed", responding with order_id.
+4. Call inventory.reserve as res with sku = item.sku, qty = 1.</pre>
+  <table>
+    <thead><tr><th>Clause</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><code>as &lt;name&gt;</code></td><td>Names the call's outputs; defaults to the operation name</td></tr>
+      <tr><td><code>with param</code></td><td>Shorthand for <code>with param = param</code></td></tr>
+      <tr><td><code>with param = value</code></td><td>Explicit argument binding</td></tr>
+      <tr><td><code>Retry N time(s)</code></td><td>0–3 retries on transient failure</td></tr>
+      <tr><td><code>On failure stop with error "..."</code></td><td>Stop the flow on permanent failure; optional <code>responding with</code></td></tr>
+    </tbody>
+  </table>
+  <p>Outputs are accessed as <code>&lt;name&gt;.&lt;field&gt;</code>, e.g. <code>charge.charge_id</code>.</p>
+
+  <!-- QUERY -->
+  <h2 id="doc-query">Query</h2>
+  <p>Loads a list of entity records from the store.</p>
+  <div class="syntax">Query &lt;entity&gt; as &lt;name&gt; [where field = value, ...]</div>
+  <pre>5. Query invoice as open_invoices where status = "open".
+6. Query order as all_orders.</pre>
+  <ul>
+    <li>Result is a list. Use <code>len(open_invoices)</code>, <code>open_invoices.field</code> (gives a list of field values), or <a href="#doc-publish"><code>Publish each</code></a> over it.</li>
+    <li>Entity must be declared under <code>## Entities</code>.</li>
+    <li><code>where</code> filter accepts multiple <code>field = value</code> pairs, comma-separated.</li>
+  </ul>
+
+  <!-- PUBLISH -->
+  <h2 id="doc-publish">Publish</h2>
+  <p>Sends one or more messages to a topic (async fan-out).</p>
+  <div class="syntax">Publish to topic "&lt;name&gt;": field = value, field = value, ...
+Publish each &lt;list&gt; to topic "&lt;name&gt;"</div>
+  <pre>6. Publish to topic "order.placed": order_id = order_id, total = pricing.total.
+7. Publish each open_invoices to topic "invoice.reminder".</pre>
+  <ul>
+    <li>First form — a single message with explicit fields.</li>
+    <li>Second form — one message per item in the list, with all fields of each record.</li>
+    <li>Topic name pattern: <code>[a-z][a-z0-9_.-]*</code></li>
+  </ul>
+
+  <!-- IF -->
+  <h2 id="doc-if">If</h2>
+  <p>Conditional branch with optional else clause.</p>
+  <div class="syntax">If &lt;condition&gt;:
+   a. &lt;step&gt;
+   b. &lt;step&gt;
+Otherwise:
+   a. &lt;step&gt;</div>
+  <pre>4. [Large order?] If `pricing.total >= LARGE_ORDER`:
+   a. [Alert sales] Slack SALES_CHANNEL: "Large order {order_id}: {pricing.total} cents".
+Otherwise:
+   a. Stop.</pre>
+  <ul>
+    <li><code>Otherwise:</code> at the same indent as <code>If</code> holds the false branch; omitting it skips straight to the next step.</li>
+    <li>Both branches rejoin at the step after the <code>If</code>.</li>
+    <li>Sub-steps are lettered (<code>a.</code>, <code>b.</code>, ...) and can include any step type including nested <code>If</code>.</li>
+  </ul>
+
+  <!-- IN PARALLEL -->
+  <h2 id="doc-parallel">In parallel</h2>
+  <p>Runs two or more sub-steps concurrently and waits for all to complete before continuing.</p>
+  <div class="syntax">In parallel:
+   a. &lt;one step&gt;
+   b. &lt;one step&gt;</div>
+  <pre>5. [Confirm] In parallel:
+   a. Email customer_email: "Order {order_id} confirmed. Total: {pricing.total}".
+   b. Save order: order_id, total = pricing.total, charge_id = charge.charge_id, status = "confirmed".</pre>
+  <ul>
+    <li>Each branch is <strong>exactly one step</strong> — no nested <code>If</code> or <code>In parallel</code>.</li>
+    <li>Branches cannot stop the flow, respond, or use <code>On failure</code> on a Call.</li>
+    <li>Outputs of parallel steps are not accessible in subsequent steps.</li>
+    <li>Requires at least two lettered sub-steps.</li>
+  </ul>
+
+  <!-- SAVE / UPDATE / DELETE -->
+  <h2 id="doc-persist">Save / Update / Delete</h2>
+  <p>Persists entity records in the store.</p>
+  <div class="syntax">Save &lt;entity&gt;: field = value, field = value, ...
+Update &lt;entity&gt;: field = value, field = value, ...
+Delete &lt;entity&gt; where &lt;key_field&gt; = value</div>
+  <pre>9.  Save order: order_id, total = pricing.total, charge_id = charge.charge_id, status = "new".
+10. Update invoice: invoice_id, status = "reminded".
+11. Delete order where order_id = order_id.</pre>
+  <table>
+    <thead><tr><th>Operation</th><th>Required fields</th></tr></thead>
+    <tbody>
+      <tr><td><code>Save</code></td><td>Every field (insert)</td></tr>
+      <tr><td><code>Update</code></td><td>Every field</td></tr>
+      <tr><td><code>Delete</code></td><td>First (key) field only, with <code>where</code></td></tr>
+    </tbody>
+  </table>
+  <p>Bare <code>field</code> is shorthand for <code>field = field</code>. Entity must be declared under <code>## Entities</code>.</p>
+
+  <!-- NOTIFICATIONS -->
+  <h2 id="doc-notify">Notifications</h2>
+  <p>Sends a message over a channel.</p>
+  <div class="syntax">&lt;Channel&gt; &lt;to&gt;: &lt;message&gt;</div>
+  <pre>12. Email customer_email: "Your order {order_id} is confirmed. Total: {pricing.total}".
+13. Slack SALES_CHANNEL: "New order {order_id} from {customer_email}".
+14. SMS phone_number: "Your code is {code}".
+15. Webhook callback_url: "done".</pre>
+  <table>
+    <thead><tr><th>Channel</th><th>Typical <code>&lt;to&gt;</code></th></tr></thead>
+    <tbody>
+      <tr><td><code>Email</code></td><td>An email address field</td></tr>
+      <tr><td><code>Slack</code></td><td>A channel constant like <code>SALES_CHANNEL</code></td></tr>
+      <tr><td><code>SMS</code></td><td>A phone number field</td></tr>
+      <tr><td><code>Webhook</code></td><td>A URL field</td></tr>
+    </tbody>
+  </table>
+  <p>Both <code>&lt;to&gt;</code> and <code>&lt;message&gt;</code> are value slots (name, path, template string, or backtick expression).</p>
+
+  <!-- RESPOND WITH -->
+  <h2 id="doc-respond">Respond with</h2>
+  <p>Ends a sync flow with a success response. Only valid in <code>Mode: sync</code>.</p>
+  <div class="syntax">Respond with field [= value], field [= value], ...</div>
+  <pre>16. Respond with order_id, charge_id = charge.charge_id, total = pricing.total.</pre>
+  <ul>
+    <li>Bare <code>field</code> is shorthand for <code>field = field</code>.</li>
+    <li>Multiple fields are comma-separated.</li>
+    <li>Using <code>Respond with</code> in an <code>async</code> flow is an error.</li>
+  </ul>
+
+  <!-- STOP -->
+  <h2 id="doc-stop">Stop</h2>
+  <p>Ends the flow. Three forms:</p>
+  <pre>17. Stop.
+18. Stop with error "not found".
+19. Stop with error "payment failed", responding with order_id.</pre>
+  <ul>
+    <li>Bare <code>Stop</code> — ends with status <code>ok</code>.</li>
+    <li><code>Stop with error "..."</code> — ends with status <code>error</code>; in sync flows sends a response with a <code>reason</code> field.</li>
+    <li><code>responding with</code> adds extra fields to the error response.</li>
+    <li>A flow that falls off the end of its last step without an explicit end is implicitly stopped with <code>ok</code>.</li>
+  </ul>
+
+  <!-- EXPRESSIONS -->
+  <h2 id="doc-expressions">Expressions</h2>
+  <p>Any value slot (in Compute, Validate, If, response fields, etc.) accepts five forms:</p>
+  <table>
+    <thead><tr><th>Form</th><th>Example</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Name or path</td><td><code>order_id</code>, <code>pricing.total</code>, <code>input.items</code></td><td>Resolves to a declared field</td></tr>
+      <tr><td>Constant</td><td><code>LARGE_ORDER</code></td><td><code>UPPER_SNAKE_CASE</code></td></tr>
+      <tr><td>Integer literal</td><td><code>42</code>, <code>-7</code></td><td>32-bit signed</td></tr>
+      <tr><td>String template</td><td><code>"Order {order_id}: {pricing.total}"</code></td><td><code>{name}</code> interpolates; <code>{{</code> / <code>}}</code> are literal braces</td></tr>
+      <tr><td>Exact expression</td><td><code>`len(items) &gt; 0`</code></td><td>Backtick-wrapped; full expression language</td></tr>
+    </tbody>
+  </table>
+  <p>Plain English prose is accepted but marks the slot as an <strong>intent</strong> — a placeholder the logic model fills in. The flow compiles structurally but cannot run until every intent is resolved.</p>
+  <h3>Exact expression language</h3>
+  <table>
+    <thead><tr><th>Category</th><th>Operators / syntax</th></tr></thead>
+    <tbody>
+      <tr><td>Arithmetic</td><td><code>+</code> <code>-</code> <code>*</code> <code>/</code> (truncating) <code>%</code></td></tr>
+      <tr><td>Comparison</td><td><code>==</code> <code>!=</code> <code>&lt;</code> <code>&lt;=</code> <code>&gt;</code> <code>&gt;=</code></td></tr>
+      <tr><td>Boolean</td><td><code>and</code> <code>or</code> <code>not</code></td></tr>
+      <tr><td>Conditional</td><td><code>value if cond else other</code></td></tr>
+      <tr><td>Functions</td><td><code>len(x)</code>, <code>abs(x)</code>, <code>sum(list)</code>, <code>product(list)</code>, <code>min(list)</code>, <code>max(list)</code>, <code>count(list)</code></td></tr>
+      <tr><td>Range</td><td><code>sum(range(lo, hi) ...)</code> — reduce over an integer range</td></tr>
+      <tr><td>Field pluck</td><td><code>items.amount</code> on a list of records → list of that field's values</td></tr>
+    </tbody>
+  </table>
+  <h3>Reduction modifiers</h3>
+  <p>Chained after a reduction function (<code>sum</code>, <code>count</code>, <code>min</code>, <code>max</code>, <code>product</code>):</p>
+  <table>
+    <thead><tr><th>Modifier</th><th>Effect</th></tr></thead>
+    <tbody>
+      <tr><td><code>where &gt; k</code> / <code>where &lt; k</code></td><td>Filter by numeric threshold</td></tr>
+      <tr><td><code>where even</code> / <code>where odd</code></td><td>Filter by parity</td></tr>
+      <tr><td><code>where divisible by k</code></td><td>Filter by divisibility</td></tr>
+      <tr><td><code>each * k</code> / <code>each + k</code></td><td>Scale each element before reducing</td></tr>
+      <tr><td><code>each squared</code></td><td>Square each element before reducing</td></tr>
+    </tbody>
+  </table>
+  <pre>`sum(xs.v where > 0)`
+`count(items each * 3 where even)`
+`sum(range(1, 10) each squared)`</pre>
+
+  <!-- TYPES -->
+  <h2 id="doc-types">Types</h2>
+  <p>The same type syntax is used everywhere — trigger payloads, entity fields, service signatures, and inline records:</p>
+  <table>
+    <thead><tr><th>Type</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td><code>int</code></td><td><code>amount int</code></td></tr>
+      <tr><td><code>str</code></td><td><code>customer_email str</code></td></tr>
+      <tr><td><code>bool</code></td><td><code>active bool</code></td></tr>
+      <tr><td><code>list of T</code></td><td><code>items list of (sku str, amount int)</code></td></tr>
+      <tr><td><code>(f T, f T, ...)</code></td><td><code>(sku str, amount int)</code></td></tr>
+      <tr><td><code>&lt;entity&gt;</code></td><td><code>order</code> (declared entity used as a type)</td></tr>
+    </tbody>
+  </table>
+
+  <!-- SCREENS -->
+  <h2 id="doc-screens">Screens</h2>
+  <p>UI forms and list views layered on top of flows. Screens appear after all flows and are optional.</p>
+  <pre>## Screen: checkout
+Title: Place an Order
+Shows: form for order_checkout
+Fields:
+- order_id "Order ID": generated
+- customer_email "Email"
+- tier "Tier"
+Submit: Place order
+After: Your order has been placed.</pre>
+  <table>
+    <thead><tr><th>Key</th><th>Required</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><code>Title:</code></td><td>yes</td><td>Display title of the screen</td></tr>
+      <tr><td><code>Shows:</code></td><td>yes</td><td><code>form for &lt;flow&gt;</code> or <code>list of &lt;entity&gt;</code></td></tr>
+      <tr><td><code>Fields:</code></td><td>no</td><td><code>-&nbsp;&lt;field&gt; "Label" [: generated]</code> — one per line</td></tr>
+      <tr><td><code>Columns:</code></td><td>no</td><td><code>-&nbsp;&lt;field&gt; "Label"</code> — for list screens</td></tr>
+      <tr><td><code>Actions:</code></td><td>no</td><td><code>-&nbsp;&lt;name&gt; "Label"</code></td></tr>
+      <tr><td><code>Submit:</code></td><td>no</td><td>Submit button label</td></tr>
+      <tr><td><code>After:</code></td><td>no</td><td>Message shown after success</td></tr>
+      <tr><td><code>Filter:</code></td><td>no</td><td>Condition to pre-filter a list view</td></tr>
+    </tbody>
+  </table>
+  <p>Screen name: <code>[a-z][a-z0-9_]*</code> — unique across all screens. The <code>generated</code> marker on a field means the UI auto-generates that value (e.g. a UUID) rather than showing an input.</p>
+
+</article>
+</div>
+</div>
+<!-- ================================================================ /DOCS VIEW -->
 
 <script>
 (function () {
@@ -723,6 +1182,27 @@ details.llm[open] summary { margin-bottom: 10px; }
     renderGutter();
     doBuild();
   })();
+
+  // Docs toggle — can't use `hidden` on main because `main { display: grid }` overrides UA [hidden]
+  let docsShown = false;
+  const docsView = document.getElementById('docs-view');
+  const studioMain = document.querySelector('main');
+  docsView.style.display = 'none';    // start hidden; main starts as grid (its default)
+  $('docs-toggle').addEventListener('click', () => {
+    docsShown = !docsShown;
+    docsView.style.display = docsShown ? 'block' : 'none';
+    studioMain.style.display = docsShown ? 'none' : 'grid';
+    $('docs-toggle').setAttribute('aria-pressed', String(docsShown));
+    $('docs-toggle').textContent = docsShown ? '← Studio' : 'Docs';
+  });
+
+  // Skill file download from within docs view
+  document.getElementById('docs-dl-skill').addEventListener('click', () => {
+    const a = document.createElement('a');
+    a.href = 'danta-skill.md';
+    a.download = 'danta-skill.md';
+    a.click();
+  });
 })();
 </script>
 </body>
