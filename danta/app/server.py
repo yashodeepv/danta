@@ -16,6 +16,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from danta.app.pipeline import build, project_zip, verify_language
 from danta.app.prompt import build_prompt, examples
+from danta.gen.correct import build_correction_prompt
 
 STATIC = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
 MAX_BODY = 1_000_000
@@ -44,6 +45,9 @@ class Handler(BaseHTTPRequestHandler):
         if self.path in ('/', '/index.html'):
             with open(os.path.join(STATIC, 'index.html'), 'rb') as f:
                 self.send(200, f.read(), 'text/html; charset=utf-8')
+        elif self.path == '/studio.html':
+            with open(os.path.join(STATIC, 'studio.html'), 'rb') as f:
+                self.send(200, f.read(), 'text/html; charset=utf-8')
         elif self.path == '/api/prompt':
             self.send(200, build_prompt(), 'text/plain; charset=utf-8')
         elif self.path == '/api/examples':
@@ -52,7 +56,7 @@ class Handler(BaseHTTPRequestHandler):
             self.send(404, 'not found', 'text/plain')
 
     def do_POST(self):
-        if self.path not in ('/api/build', '/api/project', '/api/verify'):
+        if self.path not in ('/api/build', '/api/project', '/api/verify', '/api/correction-prompt'):
             return self.send(404, 'not found', 'text/plain')
         n = int(self.headers.get('Content-Length', 0))
         if n > MAX_BODY:
@@ -74,6 +78,15 @@ class Handler(BaseHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(data)
                 return
+            if self.path == '/api/correction-prompt':
+                result = build(spec)
+                errors = result.get('errors', [])
+                if not errors:
+                    return self.json({'prompt': '', 'has_errors': False})
+                attempt = int(body.get('attempt', 1))
+                max_attempts = int(body.get('max_attempts', 3))
+                prompt = build_correction_prompt(spec, errors, attempt=attempt, max_attempts=max_attempts)
+                return self.json({'prompt': prompt, 'has_errors': True, 'error_count': len(errors)})
             self.json(build(spec))
         except Exception as e:                  # a bug here should show in the UI, not kill the server
             traceback.print_exc()

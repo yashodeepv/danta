@@ -10,6 +10,7 @@ import json
 
 from danta.app.pipeline import build, project_zip
 from danta.app.prompt import build_prompt, examples
+from danta.gen.correct import build_correction_prompt
 
 RUN_LOCALLY = {
     'python': 'pip install -e . && python -m unittest discover -s tests -t .',
@@ -39,3 +40,12 @@ def api_project(spec, language):
 def api_verify(language):
     return json.dumps({'status': 'local', 'passed': 0, 'total': 0, 'command': RUN_LOCALLY.get(language, ''),
                        'detail': 'tests run on your machine'})
+
+
+def api_correction_prompt(spec, attempt=1, max_attempts=3):
+    result = build(spec)
+    errors = result.get('errors', [])
+    if not errors:
+        return json.dumps({'prompt': '', 'has_errors': False})
+    prompt = build_correction_prompt(errors=errors, spec=spec, attempt=int(attempt), max_attempts=int(max_attempts))
+    return json.dumps({'prompt': prompt, 'has_errors': True, 'error_count': len(errors)})

@@ -61,6 +61,7 @@ LOADER = r'''<script>
       if (path === '/api/examples') return json(web.api_examples());
       if (path === '/api/build') return json(web.api_build(body.spec || ''));
       if (path === '/api/verify') return json(web.api_verify(body.language || 'python'));
+      if (path === '/api/correction-prompt') return json(web.api_correction_prompt(body.spec || '', body.attempt || 1, body.max_attempts || 3));
       if (path === '/api/project') {
         const data = web.api_project(body.spec || '', body.language || 'python');
         if (data === undefined || data === null) return json('{"fatal": "build the spec without errors first"}', 400);

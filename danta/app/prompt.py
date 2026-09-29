@@ -38,6 +38,18 @@ Rules:
    every name resolves, every call gives every parameter, every Save gives
    every field, Respond with appears only in sync flows, and every form lists
    every field of its flow's trigger.
+
+Cross-language rules (the spec compiles to Python, JavaScript, AND Java):
+10. Names must be snake_case. Never use reserved words as names:
+    Python: class, type, list, id, input, print, filter, map, range, format, next
+    Java: class, interface, package, import, new, default, extends, implements, final
+    JavaScript: function, var, let, const, delete, yield, typeof, export
+    Entity fields named "id" → use <entity>_id (e.g. order_id, user_id).
+11. Use int for ALL whole numbers. Never float for currency; store money as cents.
+12. Write expressions as valid Python syntax.
+    Integer division: // not /   (e.g. `subtotal // 10`)
+    Boolean literals: True / False   (codegen translates to true/false)
+    String literals: double quotes only inside expressions ("gold", not \'gold\').
 '''
 
 # The example must follow rule 3, so its one prose value is swapped for the

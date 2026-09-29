@@ -233,13 +233,22 @@ pre.code { margin: 0; padding: 14px; background: var(--sunk); border: 1px solid 
 .shot-table .num { text-align: right; font-variant-numeric: tabular-nums; }
 .shot-note { margin-top: 10px; font-size: 12px; color: var(--muted); }
 
-.tree { display: grid; gap: 1px; border: 1px solid var(--line); border-radius: 10px; padding: 6px; background: var(--sunk);
-  max-height: 64vh; overflow: auto; }
-.tree .dir { font: 11px var(--mono); color: var(--faint); padding: 8px 6px 2px; }
-.tree button { text-align: left; border: 0; background: none; padding: 3px 8px; border-radius: 5px; cursor: pointer;
-  font: 12px var(--mono); overflow-wrap: anywhere; }
-.tree button:hover { background: var(--surface); }
-.tree button[aria-current="true"] { background: var(--accent-soft); color: var(--accent); }
+.tree { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--line); border-radius: 10px; padding: 4px;
+  background: var(--sunk); max-height: 64vh; overflow: auto; }
+.tree-folder { display: flex; align-items: center; gap: 5px; padding: 4px 6px 4px calc(6px + var(--d,0)*14px);
+  font: 11.5px/1 var(--mono); color: var(--muted); border-radius: 5px; cursor: pointer; user-select: none; }
+.tree-folder:hover { background: var(--surface); }
+.tf-arr { font-size: 9px; color: var(--faint); display: inline-block; transition: transform .15s; }
+.tree-folder.open .tf-arr { transform: rotate(90deg); }
+.tree-file { display: flex; align-items: center; gap: 6px; width: 100%; text-align: left; border: 0; background: none;
+  padding: 3px 6px 3px calc(6px + var(--d,0)*14px); border-radius: 5px; cursor: pointer;
+  font: 12px/1 var(--mono); color: var(--ink); overflow-wrap: anywhere; }
+.tree-file:hover { background: var(--surface); }
+.tree-file[aria-current="true"] { background: var(--accent-soft); color: var(--accent); }
+.tf-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--faint); }
+.tf-dot.py  { background: #3b82f6; } .tf-dot.js  { background: #eab308; } .tf-dot.java { background: #ef4444; }
+.tf-dot.json { background: #f97316; } .tf-dot.yml { background: #8b5cf6; } .tf-dot.xml { background: #ec4899; }
+.tf-dot.md  { background: var(--muted); } .tf-dot.sh  { background: #22c55e; } .tf-dot.docker { background: #0ea5e9; }
 .seg { display: inline-flex; padding: 3px; gap: 2px; border: 1px solid var(--line); border-radius: 9px; background: var(--sunk); }
 .seg button { border: 0; background: none; padding: 5px 12px; cursor: pointer; border-radius: 6px; color: var(--muted); font-weight: 500; }
 .seg button[aria-pressed="true"] { background: var(--raised); color: var(--ink); box-shadow: var(--shadow); }
@@ -249,6 +258,21 @@ details.llm summary::-webkit-details-marker { display: none; }
 details.llm summary .chev { margin-left: auto; color: var(--muted); transition: transform .15s; }
 details.llm[open] summary .chev { transform: rotate(90deg); }
 details.llm[open] summary { margin-bottom: 10px; }
+
+/* Prism syntax tokens mapped to Danta design tokens — adapts to dark/light automatically */
+code[class*="language-"] { font: 12px/1.55 var(--mono); }
+.token.comment,.token.prolog,.token.doctype,.token.cdata { color: var(--faint); font-style: italic; }
+.token.punctuation { color: var(--muted); }
+.token.number,.token.boolean,.token.constant,.token.char { color: var(--accent); }
+.token.string,.token.attr-value,.token.builtin { color: var(--ok); }
+.token.keyword,.token.atrule,.token.rule { color: var(--call); }
+.token.function,.token.class-name,.token.annotation { color: var(--compute); }
+.token.regex,.token.variable,.token.interpolation { color: var(--notify); }
+.token.property,.token.tag,.token.namespace { color: var(--validate); }
+.token.operator,.token.entity { color: var(--muted); }
+.token.important,.token.bold { font-weight: bold; }
+.token.italic { font-style: italic; }
+
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 
 /* ---------- docs view */
@@ -470,6 +494,10 @@ html { scroll-behavior: smooth; }
         <select class="btn" id="examples" aria-label="Load an example"><option value="">Load an example…</option></select>
       </div>
       <div class="issues" id="issues"></div>
+      <div id="fix-row" class="row" style="margin-top:8px;display:none">
+        <button class="btn" id="copy-fix">Copy fix prompt</button>
+        <span class="hint" id="fix-status"></span>
+      </div>
     </section>
   </div>
 
@@ -923,6 +951,7 @@ After: Your order has been placed.</pre>
                parallel: 'flowk', join: 'flowk', persist: 'persist', notify: 'notify', query: 'persist', publish: 'notify' };
   let last = null, flowIdx = 0, tab = 'flowchart', runIdx = 0, selStep = null, examples = [], screenIdx = 0;
   let projLang = 'python', projFile = null;
+  let fixAttempt = 1;
 
   // ---------------------------------------------------------------- editor
   const spec = $('spec'), gutter = $('gutter');
@@ -976,6 +1005,7 @@ After: Your order has been placed.</pre>
 
   // ---------------------------------------------------------------- build
   async function doBuild() {
+    fixAttempt = 1;
     const btn = $('build');
     btn.disabled = true; btn.textContent = 'Building…';
     try {
@@ -995,6 +1025,27 @@ After: Your order has been placed.</pre>
     } finally { btn.disabled = false; btn.textContent = 'Build'; }
   }
   $('build').addEventListener('click', doBuild);
+
+  async function doFixPrompt() {
+    const btn = $('copy-fix'), status = $('fix-status');
+    btn.disabled = true; btn.textContent = 'Getting prompt…';
+    try {
+      const r = await fetch('/api/correction-prompt', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ spec: $('spec').value, attempt: fixAttempt, max_attempts: 3 }),
+      });
+      const data = await r.json();
+      if (!data.has_errors) { status.textContent = 'No errors — build is clean.'; return; }
+      await navigator.clipboard.writeText(data.prompt);
+      status.textContent = `Copied (attempt ${fixAttempt} of 3) — paste into your LLM, then paste the reply back here`;
+      fixAttempt = Math.min(fixAttempt + 1, 3);
+    } catch (e) {
+      status.textContent = 'Copy failed: ' + e.message;
+    } finally {
+      btn.disabled = false; btn.textContent = 'Copy fix prompt';
+    }
+  }
+  $('copy-fix').addEventListener('click', doFixPrompt);
 
   const LANGS = [['python', 'Python'], ['javascript', 'JavaScript'], ['java', 'Spring Boot']];
 
@@ -1030,6 +1081,8 @@ After: Your order has been placed.</pre>
       `<span class="rule">${esc(e.rule)}</span><span>${esc(e.message)}</span></button>`).join('');
     box.querySelectorAll('.issue').forEach((b) => b.addEventListener('click', () => gotoLine(items[+b.dataset.k].line)));
     renderGutter();
+    $('fix-row').style.display = (last.errors || []).length ? 'flex' : 'none';
+    $('fix-status').textContent = '';
   }
 
   // ---------------------------------------------------------------- results
@@ -1252,6 +1305,60 @@ After: Your order has been placed.</pre>
     if (code) code.addEventListener('click', () => { projFile = file; tab = 'project'; render(); });
   }
 
+  function langClass(path) {
+    if (path.endsWith('.py')) return 'python';
+    if (path.endsWith('.js')) return 'javascript';
+    if (path.endsWith('.java')) return 'java';
+    if (path.endsWith('.json')) return 'json';
+    if (path.endsWith('.yml') || path.endsWith('.yaml')) return 'yaml';
+    if (path.endsWith('.xml')) return 'xml';
+    if (path.endsWith('.md')) return 'markdown';
+    if (path.includes('Dockerfile')) return 'docker';
+    return 'none';
+  }
+
+  function dotHtml(name) {
+    const raw = name === 'Dockerfile' ? 'docker' : (name.match(/\.([^.]+)$/) || [])[1]?.toLowerCase() || '';
+    const cls = { py:'py', js:'js', java:'java', json:'json', yml:'yml', yaml:'yml', xml:'xml', md:'md', sh:'sh', docker:'docker' }[raw] || '';
+    return `<span class="tf-dot ${cls}"></span>`;
+  }
+
+  function buildFileTree(paths) {
+    const byPath = { '': { children: [] } };
+    for (const p of paths) {
+      const parts = p.split('/');
+      let cur = '';
+      for (let i = 0; i < parts.length; i++) {
+        const parent = cur;
+        cur = cur ? `${cur}/${parts[i]}` : parts[i];
+        if (!byPath[cur]) {
+          const node = { name: parts[i], fullPath: cur, children: [], isDir: i < parts.length - 1 };
+          byPath[cur] = node;
+          (byPath[parent] || { children: [] }).children.push(node);
+        } else if (i < parts.length - 1) {
+          byPath[cur].isDir = true;
+        }
+      }
+    }
+    function sort(n) { n.children.sort((a, b) => a.isDir !== b.isDir ? (a.isDir ? -1 : 1) : a.name.localeCompare(b.name)); n.children.forEach(sort); }
+    sort(byPath['']);
+    return byPath[''].children;
+  }
+
+  function renderFileTree(nodes, depth = 0) {
+    let html = '';
+    for (const n of nodes) {
+      const d = `style="--d:${depth}"`;
+      if (n.isDir) {
+        html += `<div class="tree-folder open" ${d} data-path="${esc(n.fullPath)}"><span class="tf-arr">▶</span>${esc(n.name)}/</div>` +
+                `<div data-children="${esc(n.fullPath)}">${renderFileTree(n.children, depth + 1)}</div>`;
+      } else {
+        html += `<button class="tree-file" ${d} data-p="${esc(n.fullPath)}" aria-current="${n.fullPath === projFile}">${dotHtml(n.name)}${esc(n.name)}</button>`;
+      }
+    }
+    return html;
+  }
+
   function paneProject(f) {
     const proj = (last.project || {})[projLang];
     if (!proj) {
@@ -1270,12 +1377,7 @@ After: Your order has been placed.</pre>
       : `<div class="verdict notverified"><b>Not verified:</b> ${esc(rep.detail)}.</div>`;
     const fmt = proj.format || {};
     const fmtNote = fmt.status === 'formatted' ? `formatted with ${esc(fmt.tool)}` : `not formatted (${esc(fmt.detail || 'no formatter')})`;
-    let tree = '', lastDir = null;
-    for (const p of paths) {
-      const i = p.lastIndexOf('/'), dir = p.slice(0, i), name = p.slice(i + 1);
-      if (dir !== lastDir) { tree += `<div class="dir">${esc(dir)}/</div>`; lastDir = dir; }
-      tree += `<button data-p="${esc(p)}" aria-current="${p === projFile}">${esc(name)}</button>`;
-    }
+    const tree = buildFileTree(paths);
     $('pane').innerHTML = `${verdict}
       <div class="row" style="margin-bottom:10px">
         <div class="seg" role="group" aria-label="Language">
@@ -1286,9 +1388,16 @@ After: Your order has been placed.</pre>
         <button class="btn primary" id="dl-proj">Download .zip</button>
         <span class="hint">${paths.length} files · ${fmtNote}</span><span class="hint" id="proj-status"></span>
       </div>
-      <div class="proj"><nav class="tree" aria-label="Project files">${tree}</nav>
-        <div><div class="hint" style="margin-bottom:6px"><code>${esc(projFile)}</code></div><pre class="code">${esc(proj.files[projFile])}</pre></div></div>`;
-    $('pane').querySelectorAll('.tree button').forEach((b) => b.addEventListener('click', () => { projFile = b.dataset.p; paneProject(f); }));
+      <div class="proj"><nav class="tree" aria-label="Project files">${renderFileTree(tree)}</nav>
+        <div><div class="hint" style="margin-bottom:6px"><code>${esc(projFile)}</code></div>
+        <pre id="code-view" class="code"><code class="language-${langClass(projFile)}">${esc(proj.files[projFile])}</code></pre></div></div>`;
+    if (window.Prism) { const c = document.querySelector('#code-view code'); if (c) Prism.highlightElement(c); }
+    $('pane').querySelectorAll('.tree-file').forEach((b) => b.addEventListener('click', () => { projFile = b.dataset.p; paneProject(f); }));
+    $('pane').querySelectorAll('.tree-folder').forEach((folder) => folder.addEventListener('click', () => {
+      folder.classList.toggle('open');
+      const ch = $('pane').querySelector(`[data-children="${folder.dataset.path}"]`);
+      if (ch) ch.style.display = folder.classList.contains('open') ? '' : 'none';
+    }));
     $('pane').querySelectorAll('.seg button').forEach((b) => b.addEventListener('click', () => { projLang = b.dataset.l; projFile = null; render(); }));
     $('dl-proj').addEventListener('click', async () => {
       $('proj-status').textContent = 'Preparing…';
@@ -1343,5 +1452,12 @@ After: Your order has been placed.</pre>
   });
 })();
 </script>
+<script>window.Prism = window.Prism || {}; window.Prism.manual = true;</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-docker.min.js" crossorigin="anonymous"></script>
 </body>
 </html>

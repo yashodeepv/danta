@@ -400,6 +400,32 @@ Steps:
 
 ---
 
+## Cross-language rules
+
+This spec compiles to **Python, JavaScript, and Java simultaneously**. Every name
+and expression must be valid in all three.
+
+### Names
+- `snake_case` only for flows, entities, services, and fields. No hyphens, no camelCase.
+- Never use these as names (reserved in at least one target):
+  - **Python**: `class`, `type`, `list`, `id`, `input`, `print`, `filter`, `map`, `range`, `format`, `next`, `iter`, `open`
+  - **Java**: `class`, `interface`, `package`, `import`, `new`, `default`, `extends`, `implements`, `instanceof`, `final`
+  - **JavaScript**: `function`, `var`, `let`, `const`, `delete`, `yield`, `typeof`, `instanceof`, `export`, `import`
+- Entity fields named `id` → use `<entity>_id` instead (e.g. `order_id`, `user_id`).
+
+### Numbers
+- Use `int` for **all** whole numbers, including money (store as cents).
+- **Never** use `float` for currency — it causes silent rounding bugs in all three targets.
+- Java `int` holds up to ~2.1 billion. The codegen widens automatically for large values; always declare as `int`.
+
+### Expressions
+- Write expressions as **valid Python**. The Python codegen uses them verbatim; Java and JS translate automatically.
+- Integer division: `//` not `/` → `subtotal // 10`, not `subtotal / 10`
+- Boolean literals: `True` / `False` (Python capitalisation) → codegen translates to `true`/`false`
+- String literals inside expressions: double quotes only → `"gold"`, not `'gold'`
+
+---
+
 ## Rules checklist
 
 - [ ] First line: `Spec: danta/0.1`
@@ -416,3 +442,6 @@ Steps:
 - [ ] `Delete` uses only the key field with `where`
 - [ ] `In parallel` branches: one step each, no Stop/Respond/If/In parallel
 - [ ] Constants, Entities, Services declared before the first `## Flow:`
+- [ ] No reserved words used as names (Python / Java / JavaScript)
+- [ ] Money and counts are `int`, never `float`
+- [ ] Expressions use `//` for integer division, `True`/`False` for booleans
