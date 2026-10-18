@@ -30,10 +30,12 @@ Rules:
    express (steps inside a loop, timeouts), design the closest supported flow
    and explain the gap in a "> " comment line. For work over many records,
    use the batch pattern (section 7.13).
-8. If people use the system through a web page, add ## Screen: sections
-   (section 12): a form for each flow a person starts, and a list for each
-   set of records a person works through, with actions for what they do to a
-   row. A screen can only run HTTP flows, so give those flows HTTP triggers.
+8. If operators or staff use the system through a web browser, add ## Screen:
+   sections (section 12) for the ADMIN/INTERNAL panel only — a form for each
+   flow they start, a list for each set of records they manage.
+   ## Screen: is NOT for the customer-facing website; the Design spec (a
+   separate file) handles that. A screen can only run HTTP flows, so give
+   those flows HTTP triggers.
 9. Check your spec against the validity rules in section 9 before replying:
    every name resolves, every call gives every parameter, every Save gives
    every field, Respond with appears only in sync flows, and every form lists

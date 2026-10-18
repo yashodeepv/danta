@@ -250,8 +250,128 @@ def verify_language(text, language):
     return verify_project(files, language)
 
 
-def project_zip(text, language, seed=0):
-    """The generated project as a zip, or None if the spec doesn't build cleanly."""
+_DESIGN_NGINX = r'''# Serves the design HTML and forwards /api/* to the backend (strips /api prefix).
+server {
+  listen 80;
+  root /usr/share/nginx/html;
+  index index.html;
+
+  location /api/ {
+    proxy_pass ${API_URL}/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  }
+
+  location / {
+    try_files $uri $uri/ /index.html;
+  }
+}
+'''
+
+_DESIGN_DOCKERFILE = '''FROM nginx:1.27-alpine
+# nginx substitutes ${API_URL} when the container starts
+COPY nginx.conf.template /etc/nginx/templates/default.conf.template
+COPY index.html /usr/share/nginx/html/
+RUN chmod -R a+r /usr/share/nginx/html
+ENV API_URL=http://app:__PORT__
+EXPOSE 80
+'''
+
+_LANG_PORT = {'python': 8000, 'javascript': 3000, 'java': 8080}
+
+
+def project_zip(text, language, seed=0, design_html=None):
+    """The generated project as a zip, or None if the spec doesn't build cleanly.
+    When design_html is provided:
+    - If the backend has ## Screen: sections, their React app (web/) moves to admin/ (port 3001)
+      and the design HTML becomes the storefront web/ (port 3000).
+    - If there are no backend screens, the design HTML is added as web/ and a compose service
+      is injected for it."""
     from danta.codegen.project import zip_bytes
     files, system = project_files(text, language, seed)
-    return (zip_bytes(files) if files else None), system
+    if files is None:
+        return None, system
+    if design_html:
+        files = dict(files)
+        web_prefix = f'{system}/web/'
+        api_port = _LANG_PORT.get(language, 8000)
+        has_admin = any(k.startswith(web_prefix) for k in files)
+
+        if has_admin:
+            # Move React admin app web/ → admin/
+            admin_prefix = f'{system}/admin/'
+            files = {
+                k.replace(web_prefix, admin_prefix, 1) if k.startswith(web_prefix) else k: v
+                for k, v in files.items()
+            }
+            # Patch compose: rename web service → admin at 3001, add storefront web at 3000
+            compose_key = f'{system}/docker-compose.yml'
+            if compose_key in files:
+                files[compose_key] = _patch_compose_for_design(
+                    files[compose_key], api_port, has_admin=True)
+        else:
+            files = {k: v for k, v in files.items() if not k.startswith(web_prefix)}
+            # Inject a web service into compose for the storefront
+            compose_key = f'{system}/docker-compose.yml'
+            if compose_key in files:
+                files[compose_key] = _patch_compose_for_design(
+                    files[compose_key], api_port, has_admin=False)
+
+        files[f'{system}/web/index.html'] = design_html
+        files[f'{system}/web/nginx.conf.template'] = _DESIGN_NGINX
+        files[f'{system}/web/Dockerfile'] = _DESIGN_DOCKERFILE.replace('__PORT__', str(api_port))
+    return zip_bytes(files), system
+
+
+_WEB_SERVICE_BLOCK = '''\
+  web:
+    build: ./web
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    environment:
+      API_URL: "http://app:{port}"
+    depends_on:
+      app:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/"]
+      interval: 5s
+      retries: 30'''
+
+
+def _patch_compose_for_design(compose_text, api_port, has_admin):
+    """Patch a docker-compose.yml for a design-spec build.
+
+    has_admin=True:  rename the existing `web` service → `admin` at port 3001,
+                     then append a new `web` service for the storefront at 3000.
+    has_admin=False: append a new `web` service for the storefront at 3000.
+    """
+    web_block = _WEB_SERVICE_BLOCK.format(port=api_port)
+    c = compose_text
+
+    if has_admin:
+        # Rename existing web service header and port
+        c = c.replace(
+            '  web:\n    build: ./web\n    restart: unless-stopped\n    ports:\n      - "3000:80"',
+            '  admin:\n    build: ./admin\n    restart: unless-stopped\n    ports:\n      - "3001:80"',
+        )
+        # Update comment line
+        c = c.replace(
+            '#   Web app: http://localhost:3000',
+            '#   Storefront: http://localhost:3000\n#   Admin panel: http://localhost:3001',
+        )
+    else:
+        # Insert storefront comment after the API/docs comment line
+        c = c.replace(
+            f'#   API and Swagger UI: http://localhost:{api_port}/docs',
+            f'#   API and Swagger UI: http://localhost:{api_port}/docs\n#   Storefront: http://localhost:3000',
+        )
+
+    # Append the storefront web service
+    if '\nvolumes:' in c:
+        c = c.replace('\nvolumes:', f'\n{web_block}\n\nvolumes:')
+    else:
+        c = c.rstrip() + f'\n{web_block}\n'
+    return c

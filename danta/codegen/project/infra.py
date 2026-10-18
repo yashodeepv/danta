@@ -128,7 +128,7 @@ def readme_section(system, port, run_line):
              'docker compose up --build', '```', '',
              f'- API and Swagger UI: http://localhost:{port}/docs']
     if system.screens:
-        lines.append('- Web app: http://localhost:3000')
+        lines.append('- Admin panel: http://localhost:3000 (or 3001 if a design spec is also built)')
     if n['mailpit']:
         lines.append('- Emails the flows send: http://localhost:8025 (Mailpit)')
     if n['rabbitmq']:

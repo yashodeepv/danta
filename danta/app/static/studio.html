@@ -81,9 +81,42 @@ header { position: sticky; top: 0; z-index: 10; display: flex; flex-wrap: wrap; 
 .theme button[aria-pressed="true"] { background: var(--raised); color: var(--ink); box-shadow: var(--shadow); }
 
 /* ---------- layout */
-main { display: grid; grid-template-columns: minmax(380px, 540px) minmax(0, 1fr); gap: 20px; padding: 20px 24px 32px; }
-@media (max-width: 1040px) { main { grid-template-columns: 1fr; } }
-.col { display: grid; gap: 20px; align-content: start; min-width: 0; }
+main { display: block; }
+
+/* ---------- landing hero */
+.landing { display: flex; align-items: center; justify-content: center; min-height: calc(100vh - 57px); padding: 40px 20px; }
+.landing-hero { width: 100%; max-width: 580px; }
+.landing-h1 { font: 800 clamp(28px,4vw,46px)/1.1 var(--display); letter-spacing: -.03em; margin: 0 0 14px; text-wrap: balance; }
+.landing-lead { color: var(--muted); font-size: 15px; line-height: 1.65; margin: 0 0 28px; max-width: 52ch; }
+.landing-ta { width: 100%; height: 140px; font: 15px/1.65 var(--sans); padding: 14px 16px; resize: vertical; border: 2px solid var(--line-strong); border-radius: 12px; background: var(--raised); color: var(--ink); display: block; }
+.landing-ta:focus { border-color: var(--accent); outline: none; }
+.landing-ta::placeholder { color: var(--faint); }
+.landing-btn { margin-top: 16px; font-size: 15px; padding: 11px 28px; }
+
+/* ---------- studio grid (2 columns) */
+.studio-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 14px; padding: 14px 20px; height: calc(100vh - 57px); box-sizing: border-box; }
+@media (max-width: 820px) { .studio-grid { grid-template-columns: 1fr; height: auto; } }
+.flow-col, .output-col { overflow: hidden; display: flex; flex-direction: column; min-height: 0; }
+.flow-card { flex: 1; min-height: 0; overflow: auto; }
+#results.card { flex: 1; min-height: 0; overflow: auto; }
+
+/* ---------- wizard modal */
+.modal-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,.5); display: flex; align-items: flex-start; justify-content: center; padding: 32px 16px 64px; overflow-y: auto; }
+.modal-box { width: 100%; max-width: 860px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 20px 80px rgba(0,0,0,.35); overflow: hidden; flex-shrink: 0; }
+.modal-hd { display: flex; align-items: center; gap: 12px; padding: 14px 20px; border-bottom: 1px solid var(--line); background: var(--sunk); }
+.modal-close { border: 0; background: none; cursor: pointer; color: var(--muted); font-size: 20px; line-height: 1; padding: 3px 8px; border-radius: 6px; }
+.modal-close:hover { background: var(--raised); color: var(--ink); }
+.wiz-steps { display: flex; align-items: center; gap: 8px; flex: 1; font-size: 13px; }
+.wiz-step-lbl { display: flex; align-items: center; gap: 7px; color: var(--muted); font-weight: 500; }
+.wiz-step-lbl.active { color: var(--ink); font-weight: 700; }
+.wiz-dot { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--line); color: var(--faint); font: 700 11px var(--mono); flex-shrink: 0; }
+.wiz-step-lbl.active .wiz-dot { background: var(--accent); color: var(--accent-ink); }
+.wiz-sep { color: var(--faint); font-size: 12px; }
+.wiz-body { display: grid; grid-template-columns: 240px 1fr; border-bottom: none; }
+@media (max-width: 700px) { .wiz-body { grid-template-columns: 1fr; } }
+.wiz-left { padding: 16px; border-right: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px; overflow-y: auto; max-height: 62vh; }
+.wiz-right { padding: 16px; min-width: 0; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; max-height: 62vh; }
+.wiz-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 20px; border-top: 1px solid var(--line); background: var(--sunk); }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px;
   min-width: 0; box-shadow: var(--shadow); }
 .card h2 { margin: 0 0 4px; font-size: 15px; font-weight: 650; letter-spacing: -.01em; display: flex; align-items: center; gap: 10px; }
@@ -105,8 +138,26 @@ select.btn { padding: 7px 10px; }
 .prompt-box { width: 100%; height: 200px; margin-top: 12px; font: 12px/1.5 var(--mono); color: var(--ink);
   background: var(--sunk); border: 1px solid var(--line); border-radius: 8px; padding: 10px; resize: vertical; }
 
+/* ---------- entry card */
+.entry-card { padding: 0; overflow: hidden; }
+.entry-sec { padding: 14px 16px 16px; }
+.entry-sec + .entry-sec { border-top: 2px solid var(--sunk); }
+.entry-sec-title { font-size: 14px; font-weight: 700; margin: 0 0 3px; }
+.entry-sec-hint { font-size: 12px; color: var(--muted); margin: 0 0 10px; line-height: 1.5; }
+.uc-ta { width: 100%; height: 90px; font: 14px/1.6 var(--sans); padding: 10px 12px; resize: vertical;
+  border: 1.5px solid var(--line-strong); border-radius: 9px; background: var(--raised); color: var(--ink); }
+.uc-ta:focus { border-color: var(--accent); outline: none; }
+.uc-ta::placeholder { color: var(--faint); }
+.fix-ta { width: 100%; height: 62px; font: 13px/1.5 var(--sans); padding: 9px 12px; resize: vertical;
+  border: 1.5px solid var(--line-strong); border-radius: 9px; background: var(--raised); color: var(--ink); }
+.fix-ta::placeholder { color: var(--faint); }
+.entry-note { font-size: 12px; color: var(--muted); margin: 5px 0 0; line-height: 1.4; min-height: 16px; }
+.entry-extras { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
+.entry-editor { height: 200px; min-height: 140px; }
+.wide { width: 100%; justify-content: center; }
+
 .editor { position: relative; display: grid; grid-template-columns: auto 1fr; border: 1px solid var(--line);
-  border-radius: 10px; background: var(--sunk); height: calc(100vh - 360px); min-height: 320px; overflow: hidden; }
+  border-radius: 10px; background: var(--sunk); overflow: hidden; }
 .editor:focus-within { border-color: var(--accent); }
 .gutter { margin: 0; padding: 12px 10px 12px 12px; font: 12.5px/1.65 var(--mono); color: var(--faint); text-align: right;
   user-select: none; overflow: hidden; border-right: 1px solid var(--line); min-width: 46px; }
@@ -146,7 +197,7 @@ select.btn { padding: 7px 10px; }
 .blocked { padding: 12px 14px; border-radius: 8px; background: var(--warn-soft); color: var(--ink); margin-bottom: 12px; }
 
 .canvas { position: relative; overflow: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--sunk);
-  background-image: radial-gradient(var(--dot) 1px, transparent 1px); background-size: 18px 18px; max-height: 70vh; }
+  background-image: radial-gradient(var(--dot) 1px, transparent 1px); background-size: 18px 18px; min-height: 160px; }
 .stage { position: relative; margin: 0 auto; }
 .stage svg { position: absolute; inset: 0; overflow: visible; pointer-events: none; }
 .edge { fill: none; stroke: var(--line-strong); stroke-width: 1.6; }
@@ -203,6 +254,11 @@ pre.code { margin: 0; padding: 14px; background: var(--sunk); border: 1px solid 
 .empty { color: var(--muted); padding: 32px 4px; }
 .proj { display: grid; grid-template-columns: minmax(180px, 260px) minmax(0, 1fr); gap: 12px; align-items: start; }
 @media (max-width: 720px) { .proj { grid-template-columns: 1fr; } }
+.ide-wrap { display: grid; grid-template-columns: minmax(150px, 210px) 1fr; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+@media (max-width: 720px) { .ide-wrap { grid-template-columns: 1fr; } }
+.ide-tree { border-right: 1px solid var(--line); overflow: hidden; display: flex; flex-direction: column; }
+.ide-code { min-width: 0; overflow: hidden; display: flex; flex-direction: column; }
+.ide-hd { padding: 5px 10px; font: 11px var(--mono); color: var(--muted); background: var(--sunk); border-bottom: 1px solid var(--line); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
 
 /* screens preview: a small browser window showing the generated app */
 .shot { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface); box-shadow: var(--shadow); }
@@ -454,6 +510,7 @@ html { scroll-behavior: smooth; }
     <span class="word">Danta</span><span class="sub">Spec Studio</span>
   </div>
   <a href="index.html" class="site-nav-back">← Home</a>
+  <button class="btn" id="edit-spec" style="display:none">✏ Edit spec</button>
   <button class="btn-docs" id="docs-toggle" aria-pressed="false">Docs</button>
   <div class="theme" role="group" aria-label="Colour theme">
     <button data-theme-set="system" title="Match the system" aria-label="System theme">
@@ -467,44 +524,122 @@ html { scroll-behavior: smooth; }
 
 
 <main>
-  <div class="col left">
-    <details class="card llm" open>
-      <summary><h2><span class="n">1</span>Get a spec from your LLM</h2><span class="chev">›</span></summary>
-      <p>The prompt teaches an LLM the Danta Spec language. Paste it into Claude or another LLM, describe your use case after <code>USE CASE</code>, and send. It replies with a spec.</p>
-      <div class="row">
-        <button class="btn primary" id="copy-prompt">Copy prompt</button>
-        <button class="btn" id="toggle-prompt" aria-expanded="false">Show prompt</button>
-        <a class="btn" id="dl-skill" href="danta-skill.md" download="danta-skill.md">↓ Skill file</a>
-        <span class="hint" id="prompt-status"></span>
-      </div>
-      <textarea class="prompt-box" id="prompt" readonly hidden aria-label="LLM prompt"></textarea>
-    </details>
 
-    <section class="card">
-      <h2><span class="n">2</span>Paste the spec</h2>
-      <p>Paste the LLM's whole reply; code fences and extra text are stripped.</p>
-      <div class="editor">
-        <pre class="gutter" id="gutter" aria-hidden="true">1</pre>
-        <textarea id="spec" spellcheck="false" aria-label="Danta Spec"></textarea>
-      </div>
-      <div class="row" style="margin-top:12px">
-        <button class="btn primary" id="build">Build</button>
-        <span class="hint"><kbd>⌘</kbd> <kbd>Enter</kbd></span>
-        <span class="spacer"></span>
-        <select class="btn" id="examples" aria-label="Load an example"><option value="">Load an example…</option></select>
-      </div>
-      <div class="issues" id="issues"></div>
-      <div id="fix-row" class="row" style="margin-top:8px;display:none">
-        <button class="btn" id="copy-fix">Copy fix prompt</button>
-        <span class="hint" id="fix-status"></span>
-      </div>
-    </section>
+  <!-- LANDING: initial entry (hidden after first build) -->
+  <div id="landing" class="landing">
+    <div class="landing-hero">
+      <h1 class="landing-h1">What do you want to build?</h1>
+      <p class="landing-lead">Describe your system in plain English. We'll compile it to Python, JavaScript &amp; Java — with tests and a React frontend included.</p>
+      <textarea id="landing-uc" class="landing-ta"
+        placeholder="e.g. A leave-request portal. Employees submit time-off requests, managers approve or reject, HR is notified for requests over 5 days."></textarea>
+      <button class="btn primary landing-btn" id="landing-go">Get started →</button>
+    </div>
   </div>
 
-  <div class="col">
-    <section class="card" id="results"><div class="empty">Building…</div></section>
+  <!-- STUDIO: flowchart + output (shown after first build) -->
+  <div id="studio-main" class="studio-grid" style="display:none">
+    <div class="flow-col">
+      <div class="card flow-card" style="padding:14px 16px">
+        <div id="flow-panel"><div class="empty">Build a spec to see the flowchart.</div></div>
+      </div>
+    </div>
+    <div class="output-col">
+      <section class="card" id="results"><div class="empty">Open the spec editor to build.</div></section>
+    </div>
   </div>
+
 </main>
+
+<!-- WIZARD MODAL (outside main so docs toggle doesn't hide it) -->
+<div class="modal-overlay" id="wizard-modal" style="display:none" aria-modal="true" role="dialog" aria-label="Spec editor">
+
+  <div class="modal-box">
+    <div class="modal-hd">
+      <div class="wiz-steps">
+        <span class="wiz-step-lbl active" id="wiz-lbl-1"><span class="wiz-dot">1</span> Backend</span>
+        <span class="wiz-sep">›</span>
+        <span class="wiz-step-lbl" id="wiz-lbl-2"><span class="wiz-dot">2</span> Design</span>
+      </div>
+      <button class="modal-close" id="modal-close" aria-label="Close">✕</button>
+    </div>
+
+    <!-- Step 1: Backend spec -->
+    <div class="wiz-body" id="wiz-s1">
+      <div class="wiz-left">
+        <div>
+          <p class="entry-sec-title" style="margin:0 0 5px">What do you want to build?</p>
+          <p class="entry-sec-hint" style="margin-bottom:8px">Describe in plain English — enriches the LLM prompts.</p>
+          <textarea id="usecase" class="uc-ta"
+            placeholder="e.g. A leave-request portal. Employees submit time-off requests, managers approve or reject, HR is notified for requests over 5 days."></textarea>
+        </div>
+        <button class="btn primary wide" id="copy-prompt">↗ Copy backend prompt</button>
+        <div class="entry-note" id="prompt-status"></div>
+        <div class="entry-extras">
+          <button class="btn" id="toggle-prompt" aria-expanded="false">Show raw prompt</button>
+          <a class="btn" href="danta-skill.md" download="danta-skill.md">↓ Skill</a>
+        </div>
+        <textarea class="prompt-box" id="prompt" readonly hidden aria-label="LLM prompt"></textarea>
+        <div style="margin-top:auto;padding-top:8px">
+          <select class="btn" id="examples" aria-label="Load an example" style="font-size:12px;width:100%"><option value="">Load an example…</option></select>
+        </div>
+      </div>
+      <div class="wiz-right">
+        <div class="editor entry-editor" style="flex:1;min-height:220px">
+          <pre class="gutter" id="gutter" aria-hidden="true">1</pre>
+          <textarea id="spec" spellcheck="false" aria-label="Danta Spec" placeholder="Paste the LLM reply here…"></textarea>
+        </div>
+        <div class="issues" id="issues"></div>
+        <div id="fix-area" style="display:none;padding-top:8px;border-top:1px solid var(--line)">
+          <p class="entry-sec-hint" style="margin-bottom:6px">What should change? (optional) — then copy the fix prompt.</p>
+          <textarea id="fix-description" class="fix-ta"
+            placeholder="e.g. The order amount should be in dollars. Also add a refund flow."></textarea>
+          <div class="row" style="margin-top:8px">
+            <button class="btn primary" id="copy-fix">↗ Copy fix prompt</button>
+            <span class="hint" id="fix-status"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="wiz-foot" id="wiz-foot-1">
+      <span class="hint"><kbd>⌘</kbd><kbd>↵</kbd> to build</span>
+      <button class="btn primary" id="wiz-next">Next: Design →</button>
+    </div>
+
+    <!-- Step 2: Design spec -->
+    <div class="wiz-body" id="wiz-s2" style="display:none">
+      <div class="wiz-left">
+        <div>
+          <p class="entry-sec-title" style="margin:0 0 5px">Customer-facing website</p>
+          <p class="entry-sec-hint" style="margin-bottom:6px">The design spec is your <strong>storefront</strong> — the beautiful, release-ready site your customers see. It lives separately from the backend.</p>
+          <p class="entry-sec-hint" style="margin-bottom:8px;padding:6px 8px;background:var(--sunk);border-radius:6px;font-size:11px">
+            <strong>Admin panel</strong> is handled by <code style="font-size:11px">## Screen:</code> sections in the backend spec (Step 1) — already done.<br>
+            <strong>Design spec</strong> = storefront, catalog, checkout, and other customer screens only.
+          </p>
+          <button class="btn wide" id="copy-design-prompt" style="background:var(--compute);border-color:var(--compute);color:#fff">↗ Copy design prompt</button>
+          <div class="entry-note" id="design-prompt-status"></div>
+        </div>
+        <div class="entry-extras">
+          <a class="btn" id="dl-design-skill" href="danta-design-skill.md" download="danta-design-skill.md">↓ Design skill</a>
+        </div>
+      </div>
+      <div class="wiz-right">
+        <div class="editor entry-editor" style="flex:1;min-height:220px">
+          <pre class="gutter" id="design-gutter" aria-hidden="true">1</pre>
+          <textarea id="design-spec" spellcheck="false" aria-label="Design Spec" placeholder="Paste the LLM reply here…"></textarea>
+        </div>
+        <div class="issues" id="design-issues"></div>
+        <span class="hint" id="design-build-status"></span>
+      </div>
+    </div>
+    <div class="wiz-foot" id="wiz-foot-2" style="display:none">
+      <button class="btn" id="wiz-back">← Backend</button>
+      <button class="btn primary" id="design-build">Build both →</button>
+    </div>
+
+    <!-- hidden build button kept for JS compat -->
+    <button id="build" style="display:none" aria-hidden="true"></button>
+  </div>
+</div>
 
 <!-- ================================================================ DOCS VIEW -->
 <div id="docs-view">
@@ -949,9 +1084,57 @@ After: Your order has been placed.</pre>
   const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const KC = { trigger: 'trigger', call: 'call', compute: 'compute', validate: 'validate', branch: 'branch',
                parallel: 'flowk', join: 'flowk', persist: 'persist', notify: 'notify', query: 'persist', publish: 'notify' };
-  let last = null, flowIdx = 0, tab = 'flowchart', runIdx = 0, selStep = null, examples = [], screenIdx = 0;
+  let last = null, flowIdx = 0, tab = 'project', runIdx = 0, selStep = null, examples = [], screenIdx = 0;
   let projLang = 'python', projFile = null;
   let fixAttempt = 1;
+  let designHtml = null;
+
+  // ---------------------------------------------------------------- wizard modal
+  let wizardStep = 1;
+  function goToStep(n) {
+    wizardStep = n;
+    $('wiz-s1').style.display = n === 1 ? 'grid' : 'none';
+    $('wiz-foot-1').style.display = n === 1 ? 'flex' : 'none';
+    $('wiz-s2').style.display = n === 2 ? 'grid' : 'none';
+    $('wiz-foot-2').style.display = n === 2 ? 'flex' : 'none';
+    $('wiz-lbl-1').classList.toggle('active', n === 1);
+    $('wiz-lbl-2').classList.toggle('active', n === 2);
+  }
+  function openWizard() {
+    const landingUc = $('landing-uc');
+    if (landingUc && landingUc.value.trim() && !$('usecase').value.trim()) {
+      $('usecase').value = landingUc.value;
+    }
+    goToStep(1);
+    $('wizard-modal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+  function closeWizard() {
+    $('wizard-modal').style.display = 'none';
+    document.body.style.overflow = '';
+  }
+  $('landing-go').addEventListener('click', () => {
+    const uc = $('landing-uc').value.trim();
+    if (uc) $('usecase').value = uc;
+    openWizard();
+  });
+  $('modal-close').addEventListener('click', closeWizard);
+  $('wizard-modal').addEventListener('click', (e) => { if (e.target === $('wizard-modal')) closeWizard(); });
+  $('edit-spec').addEventListener('click', openWizard);
+  $('wiz-next').addEventListener('click', () => goToStep(2));
+  $('wiz-back').addEventListener('click', () => goToStep(1));
+
+  // ---------------------------------------------------------------- design-spec gutter
+  const designSpecEl = $('design-spec'), designGutter = $('design-gutter');
+  function renderDesignGutter() {
+    const n = designSpecEl.value.split('\n').length;
+    let out = '';
+    for (let i = 1; i <= n; i++) out += `${i}\n`;
+    designGutter.innerHTML = out;
+    designGutter.scrollTop = designSpecEl.scrollTop;
+  }
+  designSpecEl.addEventListener('input', renderDesignGutter);
+  designSpecEl.addEventListener('scroll', () => { designGutter.scrollTop = designSpecEl.scrollTop; });
 
   // ---------------------------------------------------------------- editor
   const spec = $('spec'), gutter = $('gutter');
@@ -966,7 +1149,7 @@ After: Your order has been placed.</pre>
   spec.addEventListener('input', renderGutter);
   spec.addEventListener('scroll', () => { gutter.scrollTop = spec.scrollTop; });
   spec.addEventListener('keydown', (e) => {
-    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); doBuild(); }
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); doBuildAll(); }
     if (e.key === 'Tab' && !e.shiftKey) {
       e.preventDefault();
       const s = spec.selectionStart;
@@ -990,17 +1173,33 @@ After: Your order has been placed.</pre>
     if (promptText === null) promptText = await (await fetch('/api/prompt')).text();
     return promptText;
   }
+  function withUseCase(base) {
+    const uc = ($('usecase').value || '').trim();
+    return uc ? base + uc : base;
+  }
   $('copy-prompt').addEventListener('click', async () => {
-    const t = await getPrompt();
-    try { await navigator.clipboard.writeText(t); $('prompt-status').textContent = `Copied (${t.length.toLocaleString()} characters). Add your use case at the end.`; }
-    catch { $('prompt').hidden = false; $('prompt').value = t; $('prompt').select(); $('prompt-status').textContent = 'Select all and copy the text below.'; }
+    const btn = $('copy-prompt'), status = $('prompt-status');
+    btn.disabled = true; btn.textContent = 'Copying…';
+    try {
+      const t = withUseCase(await getPrompt());
+      try {
+        await navigator.clipboard.writeText(t);
+        const uc = ($('usecase').value || '').trim();
+        status.textContent = uc
+          ? `Backend prompt copied with your use case (${t.length.toLocaleString()} chars) — paste into your LLM`
+          : `Copied (${t.length.toLocaleString()} chars) — add your use case in the LLM chat after pasting`;
+      } catch {
+        $('prompt').hidden = false; $('prompt').value = t; $('prompt').select();
+        status.textContent = 'Select all and copy the text below.';
+      }
+    } finally { btn.disabled = false; btn.textContent = 'Copy backend prompt'; }
   });
   $('toggle-prompt').addEventListener('click', async () => {
     const box = $('prompt');
     box.hidden = !box.hidden;
     $('toggle-prompt').setAttribute('aria-expanded', String(!box.hidden));
-    $('toggle-prompt').textContent = box.hidden ? 'Show prompt' : 'Hide prompt';
-    if (!box.hidden && !box.value) box.value = await getPrompt();
+    $('toggle-prompt').textContent = box.hidden ? 'Show raw prompt' : 'Hide raw prompt';
+    if (!box.hidden) box.value = withUseCase(await getPrompt());
   });
 
   // ---------------------------------------------------------------- build
@@ -1015,24 +1214,42 @@ After: Your order has been placed.</pre>
       if (last.spec && last.spec !== spec.value) { spec.value = last.spec; }
       flowIdx = 0; selStep = null;
       runIdx = longestRun(last.flows?.[0]);
-      if (tab === 'project' && !Object.keys(last.project || {}).length) tab = 'flowchart';
-      if (tab === 'screens' && !(last.screens || []).length) tab = 'flowchart';
+      // Show studio, hide landing after first build
+      $('landing').style.display = 'none';
+      $('studio-main').style.display = 'grid';
+      $('edit-spec').style.display = '';
+      if (tab === 'project' && !Object.keys(last.project || {}).length) tab = 'runs';
+      if (tab === 'screens' && !(last.screens || []).length) tab = 'runs';
       if (screenIdx >= (last.screens || []).length) screenIdx = 0;
       render();
+      renderFlow();
       verifyAll(last);
     } catch (e) {
       $('results').innerHTML = `<div class="fatal">Couldn't reach the backend: ${esc(e.message)}. Is <code>danta studio</code> still running?</div>`;
     } finally { btn.disabled = false; btn.textContent = 'Build'; }
   }
-  $('build').addEventListener('click', doBuild);
+  async function doBuildAll() {
+    const btn = $('design-build');
+    if (btn) { btn.disabled = true; btn.textContent = 'Building…'; }
+    try {
+      await doBuild();
+      // Backend errors: go back to step 1 so issues + fix prompt are visible
+      if (last && (last.errors || []).length) { goToStep(1); return; }
+      if ($('design-spec').value.trim()) await doDesignBuild();
+      if (last && !(last.errors || []).length && last.flows && last.flows.length) closeWizard();
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = 'Build both →'; }
+    }
+  }
 
   async function doFixPrompt() {
     const btn = $('copy-fix'), status = $('fix-status');
     btn.disabled = true; btn.textContent = 'Getting prompt…';
     try {
+      const userNote = ($('fix-description').value || '').trim();
       const r = await fetch('/api/correction-prompt', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ spec: $('spec').value, attempt: fixAttempt, max_attempts: 3 }),
+        body: JSON.stringify({ spec: $('spec').value, attempt: fixAttempt, max_attempts: 3, user_note: userNote }),
       });
       const data = await r.json();
       if (!data.has_errors) { status.textContent = 'No errors — build is clean.'; return; }
@@ -1042,10 +1259,79 @@ After: Your order has been placed.</pre>
     } catch (e) {
       status.textContent = 'Copy failed: ' + e.message;
     } finally {
-      btn.disabled = false; btn.textContent = 'Copy fix prompt';
+      btn.disabled = false; btn.textContent = '↗ Copy fix prompt';
     }
   }
   $('copy-fix').addEventListener('click', doFixPrompt);
+
+  $('copy-design-prompt').addEventListener('click', async () => {
+    const btn = $('copy-design-prompt'), status = $('design-prompt-status');
+    btn.disabled = true; btn.textContent = 'Getting prompt…';
+    const uc = ($('usecase').value || '').trim();
+    const ucSection = uc ? '\n\n========== USE CASE ==========\n\n' + uc : '';
+    try {
+      const specVal = $('spec').value.trim();
+      if (specVal) {
+        // Try context-rich prompt (spec compiled → entity/flow list injected)
+        const r = await fetch('/api/design-prompt', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ spec: specVal }),
+        });
+        const data = await r.json();
+        if (data.ok) {
+          await navigator.clipboard.writeText(data.prompt + ucSection);
+          status.textContent = uc
+            ? 'Design prompt copied with use case + backend context'
+            : 'Design prompt copied with backend context — add your design description at the end';
+          return;
+        }
+        // Spec has errors: still fall through to bare prompt
+        status.textContent = 'Note: backend spec has errors — prompt will have no backend context. ';
+      }
+      // No spec or spec errors: fetch the raw skill file and fill in the use case
+      const r = await fetch('/danta-design-skill.md');
+      let skill = await r.text();
+      const ctxBlock = uc
+        ? `No backend spec compiled yet.\n\nUSE CASE:\n${uc}`
+        : 'No backend spec compiled yet. Describe the system after this prompt.';
+      skill = skill.replace('{{system_context}}', ctxBlock);
+      await navigator.clipboard.writeText(skill);
+      status.textContent = uc
+        ? 'Design prompt copied with your use case'
+        : 'Design prompt copied — build a backend spec first for richer context, or add details in the LLM chat';
+    } catch (e) {
+      status.textContent = 'Copy failed: ' + e.message;
+    } finally {
+      btn.disabled = false; btn.textContent = 'Copy design prompt';
+    }
+  });
+
+  // ---------------------------------------------------------------- design build
+  async function doDesignBuild() {
+    const status = $('design-build-status');
+    try {
+      const r = await fetch('/api/design-build', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ spec: $('spec').value, design_spec: $('design-spec').value }),
+      });
+      const data = await r.json();
+      const issuesBox = $('design-issues');
+      if (!data.ok) {
+        issuesBox.innerHTML = (data.errors || ['Unknown error']).map((e) =>
+          `<div class="issue" style="cursor:default">${esc(e)}</div>`).join('');
+        if (status) status.textContent = `${(data.errors || []).length} error(s)`;
+        return;
+      }
+      issuesBox.innerHTML = '';
+      if (status) status.textContent = 'Preview ready';
+      designHtml = data.html;
+      tab = 'design';
+      if (last && last.flows && last.flows.length) render();
+    } catch (e) {
+      if (status) status.textContent = 'Error: ' + e.message;
+    }
+  }
+  $('design-build').addEventListener('click', doBuildAll);
 
   const LANGS = [['python', 'Python'], ['javascript', 'JavaScript'], ['java', 'Spring Boot']];
 
@@ -1077,11 +1363,12 @@ After: Your order has been placed.</pre>
       ...(last.intents || []).map((i) => ({ line: i.line, rule: 'intent', cls: 'intent',
         message: `${i.step}.${i.field} is prose (“${i.text}”): it needs the logic model, or an exact expression in backquotes` })),
     ].sort((a, b) => a.line - b.line);
-    box.innerHTML = items.map((e, k) => `<button class="issue ${e.cls}" data-k="${k}"><span class="ln">line ${e.line}</span>` +
-      `<span class="rule">${esc(e.rule)}</span><span>${esc(e.message)}</span></button>`).join('');
+    box.innerHTML = items.map((e, k) => `<button class=”issue ${e.cls}” data-k=”${k}”><span class=”ln”>line ${e.line}</span>` +
+      `<span class=”rule”>${esc(e.rule)}</span><span>${esc(e.message)}</span></button>`).join('');
     box.querySelectorAll('.issue').forEach((b) => b.addEventListener('click', () => gotoLine(items[+b.dataset.k].line)));
     renderGutter();
-    $('fix-row').style.display = (last.errors || []).length ? 'flex' : 'none';
+    const hasErrors = (last.errors || []).length > 0;
+    $('fix-area').style.display = hasErrors ? '' : 'none';
     $('fix-status').textContent = '';
   }
 
@@ -1107,20 +1394,19 @@ After: Your order has been placed.</pre>
         : rep.status === 'local' ? 'tests run locally' : rep.status;
       chips.push(`<span class="chip ${cls}">${label} ${text}</span>`);
     }
-    const picker = last.flows.length > 1 ? `<select class="btn" id="flowpick">${last.flows.map((x, i) =>
-      `<option value="${i}" ${i === flowIdx ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}</select>` : `<span class="chip">${esc(f.name)}</span>`;
-    const tabs = [['flowchart', 'Flowchart'], ['runs', 'Test runs', f.runs.length],
+    const tabs = [['runs', 'Test runs', f.runs.length],
                   ...((last.screens || []).length ? [['screens', 'Screens', last.screens.length]] : []),
-                  ['project', 'Project', badge((last.project || {})[projLang]?.verification)], ['ir2', 'IR2']];
-    res.innerHTML = `<div class="summary"><span class="sys">${esc(last.system)}</span>${picker}${chips.join('')}</div>
+                  ['project', 'Project', badge((last.project || {})[projLang]?.verification)],
+                  ['design', 'Design'], ['ir2', 'IR2']];
+    if (!tabs.find(([k]) => k === tab)) tab = 'project';
+    res.innerHTML = `<div class="summary"><span class="sys">${esc(last.system)}</span>${last.flows.length > 1 ? `<span class="chip">${esc(f.name)}</span>` : ''} ${chips.join('')}<button class="btn" id="res-edit-spec" style="margin-left:auto;flex-shrink:0">✏ Edit spec</button></div>
       ${last.description ? `<p class="desc">${esc(last.description)}</p>` : ''}
       ${f.intent ? `<p class="desc"><b>Intent:</b> ${esc(f.intent)}</p>` : ''}
       <nav class="tabs" role="tablist">${tabs.map(([k, n, b]) => `<button class="tab" role="tab" data-t="${k}" aria-selected="${k === tab}">${n}${b !== undefined && b !== '' ? ` <span class="badge">${b}</span>` : ''}</button>`).join('')}</nav>
       <div class="pane" id="pane"></div>`;
     res.querySelectorAll('.tab').forEach((b) => b.addEventListener('click', () => { tab = b.dataset.t; render(); }));
-    const fp = $('flowpick');
-    if (fp) fp.addEventListener('change', () => { flowIdx = +fp.value; runIdx = longestRun(last.flows[flowIdx]); selStep = null; render(); });
-    ({ flowchart: paneFlow, runs: paneRuns, screens: paneScreens, project: paneProject, ir2: paneIR })[tab](f);
+    const reb = $('res-edit-spec'); if (reb) reb.addEventListener('click', openWizard);
+    ({ runs: paneRuns, screens: paneScreens, project: paneProject, design: paneDesign, ir2: paneIR })[tab](f);
   }
   // Open on the run that walks the most of the flow, so the chart isn't mostly greyed out.
   function longestRun(f) {
@@ -1131,12 +1417,32 @@ After: Your order has been placed.</pre>
 
   function blocked(f) { return f.blocked ? `<div class="blocked">${esc(f.blocked)}</div>` : ''; }
 
-  // ---------------------------------------------------------------- flowchart
-  function paneFlow(f) {
-    $('pane').innerHTML = `${blocked(f)}<div class="canvas"><div class="stage" id="stage"></div></div><div class="detail" id="detail"></div>
-      ${f.runs.length ? `<p class="hint" style="margin-top:8px">Highlighted: the path of test run <b>${esc(f.runs[runIdx].name)}</b>. Pick another on the Test runs tab.</p>` : ''}`;
+  // ---------------------------------------------------------------- flowchart (middle column, always rendered)
+  function renderFlow() {
+    if (!last || !last.flows || !last.flows.length) return;
+    const f = last.flows[flowIdx];
+    const panel = $('flow-panel');
+    const picker = last.flows.length > 1
+      ? `<div style="margin-bottom:10px"><select class="btn" id="flowpick">${last.flows.map((x, i) =>
+          `<option value="${i}" ${i === flowIdx ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}</select></div>`
+      : '';
+    panel.innerHTML = `${picker}${blocked(f)}<div class="canvas"><div class="stage" id="stage"></div></div>
+      <div class="detail" id="detail" style="margin-top:14px"></div>
+      ${f.runs.length ? `<p class="hint" style="margin-top:8px">Highlighted: path of run <b>${esc(f.runs[runIdx].name)}</b>. Switch on the Runs tab.</p>` : ''}`;
+    const fp = $('flowpick');
+    if (fp) fp.addEventListener('change', () => {
+      flowIdx = +fp.value; runIdx = longestRun(last.flows[flowIdx]); selStep = null;
+      renderFlow(); render();
+    });
     draw(f);
     select(f, selStep || (f.steps.find((s) => s.kind === 'compute') || f.steps[0]).id);
+  }
+
+  // ---------------------------------------------------------------- design preview tab
+  function paneDesign() {
+    if (!designHtml) { $('pane').innerHTML = '<div class="empty">Build a design spec on the left to see the UI preview here.</div>'; return; }
+    $('pane').innerHTML = '<iframe id="design-frame" style="width:100%;height:62vh;border:1px solid var(--line);border-radius:8px;background:white" sandbox="allow-same-origin allow-scripts"></iframe>';
+    $('design-frame').srcdoc = designHtml;
   }
 
   function kcolor(s) { return s.kind === 'end' ? (s.status === 'error' ? 'var(--err)' : 'var(--ok)') : `var(--${KC[s.kind]})`; }
@@ -1232,7 +1538,7 @@ After: Your order has been placed.</pre>
         ${Object.keys(r.mocks).length ? `<dt>services</dt><dd>${esc(JSON.stringify(r.mocks))}</dd>` : ''}
         <dt>effects</dt><dd>${r.effects.length ? `<ul>${r.effects.map((e) => `<li>${esc(e)}</li>`).join('')}</ul>` : 'none'}</dd>
         <dt>result</dt><dd>${esc(r.status)}${r.response ? ` · ${esc(JSON.stringify(r.response))}` : ''}${r.error ? ` · ${esc(r.error)}` : ''}</dd></dl>`;
-    $('pane').querySelectorAll('.run').forEach((b) => b.addEventListener('click', () => { runIdx = +b.dataset.i; paneRuns(f); }));
+    $('pane').querySelectorAll('.run').forEach((b) => b.addEventListener('click', () => { runIdx = +b.dataset.i; paneRuns(f); renderFlow(); }));
   }
 
   // ---------------------------------------------------------------- project
@@ -1388,9 +1694,16 @@ After: Your order has been placed.</pre>
         <button class="btn primary" id="dl-proj">Download .zip</button>
         <span class="hint">${paths.length} files · ${fmtNote}</span><span class="hint" id="proj-status"></span>
       </div>
-      <div class="proj"><nav class="tree" aria-label="Project files">${renderFileTree(tree)}</nav>
-        <div><div class="hint" style="margin-bottom:6px"><code>${esc(projFile)}</code></div>
-        <pre id="code-view" class="code"><code class="language-${langClass(projFile)}">${esc(proj.files[projFile])}</code></pre></div></div>`;
+      <div class="ide-wrap">
+        <div class="ide-tree">
+          <div class="ide-hd">Files</div>
+          <nav class="tree" style="border:none;border-radius:0;max-height:58vh" aria-label="Project files">${renderFileTree(tree)}</nav>
+        </div>
+        <div class="ide-code">
+          <div class="ide-hd"><code style="background:none;padding:0;font-size:11px">${esc(projFile)}</code></div>
+          <pre id="code-view" class="code" style="border:none;border-radius:0;margin:0;max-height:58vh"><code class="language-${langClass(projFile)}">${esc(proj.files[projFile])}</code></pre>
+        </div>
+      </div>`;
     if (window.Prism) { const c = document.querySelector('#code-view code'); if (c) Prism.highlightElement(c); }
     $('pane').querySelectorAll('.tree-file').forEach((b) => b.addEventListener('click', () => { projFile = b.dataset.p; paneProject(f); }));
     $('pane').querySelectorAll('.tree-folder').forEach((folder) => folder.addEventListener('click', () => {
@@ -1402,7 +1715,7 @@ After: Your order has been placed.</pre>
     $('dl-proj').addEventListener('click', async () => {
       $('proj-status').textContent = 'Preparing…';
       const r = await fetch('/api/project', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-                                              body: JSON.stringify({ spec: spec.value, language: projLang }) });
+                                              body: JSON.stringify({ spec: spec.value, language: projLang, design_spec: ($('design-spec') || {}).value || '' }) });
       if (!r.ok) { $('proj-status').textContent = 'Build the spec without errors first.'; return; }
       const a = document.createElement('a');
       a.href = URL.createObjectURL(await r.blob());
@@ -1425,20 +1738,18 @@ After: Your order has been placed.</pre>
       const i = $('examples').value; if (i === '') return;
       spec.value = examples[+i].text; $('examples').value = ''; renderGutter(); doBuild();
     });
-    spec.value = examples[0].text;
     renderGutter();
-    doBuild();
   })();
 
-  // Docs toggle — can't use `hidden` on main because `main { display: grid }` overrides UA [hidden]
+  // Docs toggle
   let docsShown = false;
   const docsView = document.getElementById('docs-view');
   const studioMain = document.querySelector('main');
-  docsView.style.display = 'none';    // start hidden; main starts as grid (its default)
+  docsView.style.display = 'none';
   $('docs-toggle').addEventListener('click', () => {
     docsShown = !docsShown;
     docsView.style.display = docsShown ? 'block' : 'none';
-    studioMain.style.display = docsShown ? 'none' : 'grid';
+    studioMain.style.display = docsShown ? 'none' : '';
     $('docs-toggle').setAttribute('aria-pressed', String(docsShown));
     $('docs-toggle').textContent = docsShown ? '← Studio' : 'Docs';
   });

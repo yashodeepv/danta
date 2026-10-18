@@ -65,6 +65,7 @@ class Compiled:
     intents: List[Intent] = field(default_factory=list)
     lines: Dict[Tuple[str, str], int] = field(default_factory=dict)     # (flow, step id) -> line
     screens: list = field(default_factory=list)                         # danta.ui.model.Screen
+    entities: dict = field(default_factory=dict)                        # name -> RecordT
 
     @property
     def ok(self):
@@ -554,6 +555,7 @@ def compile_spec(text, intent=None):
         _check_ir2(flow, out, fc.placeholders)
     if not doc.flows:
         out.errors.append(SpecError('layout', doc.system_line, 'a system has at least one "## Flow:"'))
+    out.entities = entities
     out.screens = compile_screens(doc.screens, out.flows, entities, out.errors)
     seen, unique = set(), []
     for e in out.errors:                       # the same fault can surface twice; say it once

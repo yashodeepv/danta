@@ -3,25 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Danta</title>
+<title>Danta — Spec-to-code compiler</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=JetBrains+Mono:wght@400;500&display=swap">
 <script>
-  // the saved theme is applied before the page paints, so it never flashes the other one
   try { const t = localStorage.getItem('danta-theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}
 </script>
 <style>
-/* Danta Spec Studio. Tokens first: light on :root, dark under [data-theme="dark"] or the system setting. */
 :root {
   color-scheme: light;
   --paper: #f6f4ef; --surface: #fffdf9; --sunk: #f1eee7; --raised: #ffffff;
   --ink: #1f1c18; --muted: #6b645a; --faint: #9a9185; --line: #e4ded3; --line-strong: #d3cbbd;
   --dot: #ddd6c9; --accent: #c2410c; --accent-ink: #ffffff; --accent-soft: #fbe9df; --hl: #fde7a7;
-  --ok: #1f7a4d; --ok-soft: #e1f2e8; --err: #b42318; --err-soft: #fbe6e3; --warn: #9a5b06; --warn-soft: #fbefd9;
+  --ok: #1f7a4d; --ok-soft: #e1f2e8; --err: #b42318; --err-soft: #fbe6e3;
   --trigger: #4f5bd5; --call: #2c78b8; --compute: #7c4dc4; --validate: #9a5b06; --branch: #be185d;
-  --flowk: #6b645a; --persist: #1f7a4d; --notify: #0f7c83;
-  --tint: 7%;
+  --persist: #1f7a4d; --notify: #0f7c83;
   --shadow: 0 1px 2px rgb(40 30 10 / 5%), 0 4px 16px rgb(40 30 10 / 5%);
   --radius: 12px;
   --sans: "DM Sans", "Inter", -apple-system, system-ui, sans-serif;
@@ -33,10 +30,9 @@
   --paper: #121110; --surface: #1a1917; --sunk: #151413; --raised: #22201d;
   --ink: #ece7df; --muted: #a39b8f; --faint: #7a7368; --line: #2c2a26; --line-strong: #3a3732;
   --dot: #2a2824; --accent: #f59e0b; --accent-ink: #1a1206; --accent-soft: #3a2a10; --hl: #5a4312;
-  --ok: #5cc48a; --ok-soft: #16301f; --err: #f2766b; --err-soft: #3a1b18; --warn: #e0a546; --warn-soft: #362810;
+  --ok: #5cc48a; --ok-soft: #16301f; --err: #f2766b; --err-soft: #3a1b18;
   --trigger: #8f98f2; --call: #6aaee6; --compute: #b393ee; --validate: #e0a546; --branch: #f472b6;
-  --flowk: #a39b8f; --persist: #5cc48a; --notify: #4cc3c9;
-  --tint: 12%;
+  --persist: #5cc48a; --notify: #4cc3c9;
   --shadow: 0 1px 2px rgb(0 0 0 / 30%), 0 6px 20px rgb(0 0 0 / 25%);
 }
 @media (prefers-color-scheme: dark) {
@@ -45,292 +41,86 @@
     --paper: #121110; --surface: #1a1917; --sunk: #151413; --raised: #22201d;
     --ink: #ece7df; --muted: #a39b8f; --faint: #7a7368; --line: #2c2a26; --line-strong: #3a3732;
     --dot: #2a2824; --accent: #f59e0b; --accent-ink: #1a1206; --accent-soft: #3a2a10; --hl: #5a4312;
-    --ok: #5cc48a; --ok-soft: #16301f; --err: #f2766b; --err-soft: #3a1b18; --warn: #e0a546; --warn-soft: #362810;
+    --ok: #5cc48a; --ok-soft: #16301f; --err: #f2766b; --err-soft: #3a1b18;
     --trigger: #8f98f2; --call: #6aaee6; --compute: #b393ee; --validate: #e0a546; --branch: #f472b6;
-    --flowk: #a39b8f; --persist: #5cc48a; --notify: #4cc3c9;
-    --tint: 12%;
+    --persist: #5cc48a; --notify: #4cc3c9;
     --shadow: 0 1px 2px rgb(0 0 0 / 30%), 0 6px 20px rgb(0 0 0 / 25%);
   }
 }
 
-* { box-sizing: border-box; }
-html, body { height: 100%; }
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
 body { margin: 0; background: var(--paper); color: var(--ink); font: 14px/1.55 var(--sans);
   -webkit-font-smoothing: antialiased; transition: background .2s, color .2s; }
 button { font: inherit; color: inherit; }
 code { font: .92em var(--mono); background: var(--sunk); padding: 1px 5px; border-radius: 4px; }
-button:focus-visible, textarea:focus-visible, select:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-/* ---------- header */
-header { position: sticky; top: 0; z-index: 10; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 28px;
-  padding: 12px 24px; background: color-mix(in srgb, var(--surface) 88%, transparent); backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--line); }
-.brand { display: flex; align-items: center; gap: 10px; }
-.brand svg { width: 30px; height: 30px; flex-shrink: 0; }
-.brand .word { font-size: 20px; font-weight: 700; letter-spacing: -.02em; line-height: 1; }
-.brand .sub { display: block; font-size: 11px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-top: 3px; }
-.steps { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted); margin-left: auto; }
-.steps span { display: inline-flex; align-items: center; gap: 7px; }
-.steps b { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; font-size: 11px;
-  background: var(--accent-soft); color: var(--accent); }
-.steps i { width: 18px; height: 1px; background: var(--line-strong); }
-.theme { display: inline-flex; padding: 3px; gap: 2px; border: 1px solid var(--line); border-radius: 999px; background: var(--sunk); }
-.theme button { display: grid; place-items: center; width: 30px; height: 26px; border: 0; border-radius: 999px; background: none;
-  color: var(--muted); cursor: pointer; }
-.theme button svg { width: 15px; height: 15px; }
-.theme button[aria-pressed="true"] { background: var(--raised); color: var(--ink); box-shadow: var(--shadow); }
+/* ---- shared ---- */
+.lp-eyebrow { font: 700 11px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin: 0 0 12px; }
+.lp-heading { font-family: var(--display); font-size: clamp(26px, 3vw, 40px); font-weight: 800; letter-spacing: -.025em; margin: 0 0 16px; line-height: 1.15; text-wrap: balance; }
+.lp-sub { font-size: 16px; color: var(--muted); line-height: 1.7; max-width: 58ch; margin: 0 0 48px; }
+.pad { padding: 88px 72px; }
+.pad-sm { padding: 64px 72px; }
 
-/* ---------- layout */
-main { display: grid; grid-template-columns: minmax(380px, 540px) minmax(0, 1fr); gap: 20px; padding: 20px 24px 32px; }
-@media (max-width: 1040px) { main { grid-template-columns: 1fr; } }
-.col { display: grid; gap: 20px; align-content: start; min-width: 0; }
-.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px;
-  min-width: 0; box-shadow: var(--shadow); }
-.card h2 { margin: 0 0 4px; font-size: 15px; font-weight: 650; letter-spacing: -.01em; display: flex; align-items: center; gap: 10px; }
-.card h2 .n { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%;
-  background: var(--accent); color: var(--accent-ink); font-size: 12px; }
-.card p { margin: 0 0 14px; color: var(--muted); max-width: 62ch; }
-.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.spacer { flex: 1; }
-.btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line-strong); background: var(--raised);
-  border-radius: 8px; padding: 7px 14px; cursor: pointer; font-weight: 500; transition: border-color .15s, background .15s; }
-.btn:hover { border-color: var(--accent); }
-.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
-.btn.primary:hover { filter: brightness(1.06); }
-.btn.primary:disabled { opacity: .6; cursor: progress; }
-.hint { font-size: 12px; color: var(--muted); }
-kbd { font: 11px var(--mono); padding: 1px 5px; border: 1px solid var(--line-strong); border-bottom-width: 2px; border-radius: 4px; color: var(--muted); }
-select.btn { padding: 7px 10px; }
-
-.prompt-box { width: 100%; height: 200px; margin-top: 12px; font: 12px/1.5 var(--mono); color: var(--ink);
-  background: var(--sunk); border: 1px solid var(--line); border-radius: 8px; padding: 10px; resize: vertical; }
-
-.editor { position: relative; display: grid; grid-template-columns: auto 1fr; border: 1px solid var(--line);
-  border-radius: 10px; background: var(--sunk); height: calc(100vh - 360px); min-height: 320px; overflow: hidden; }
-.editor:focus-within { border-color: var(--accent); }
-.gutter { margin: 0; padding: 12px 10px 12px 12px; font: 12.5px/1.65 var(--mono); color: var(--faint); text-align: right;
-  user-select: none; overflow: hidden; border-right: 1px solid var(--line); min-width: 46px; }
-.gutter .bad { color: var(--err); font-weight: 700; }
-.editor textarea { margin: 0; border: 0; resize: none; padding: 12px; font: 12.5px/1.65 var(--mono); color: var(--ink);
-  background: transparent; white-space: pre; overflow: auto; tab-size: 3; }
-.editor textarea:focus { outline: none; }
-
-.issues { display: grid; gap: 6px; margin-top: 12px; max-height: 220px; overflow: auto; }
-.issue { display: grid; grid-template-columns: auto auto 1fr; gap: 10px; align-items: baseline; text-align: left;
-  padding: 8px 10px; border-radius: 8px; border: 1px solid transparent; background: var(--err-soft); cursor: pointer; font-size: 13px; }
-.issue:hover { border-color: var(--line-strong); }
-.issue.warning { background: var(--warn-soft); }
-.issue.intent { background: var(--accent-soft); }
-.issue .ln { font: 12px var(--mono); color: var(--muted); }
-.issue .rule { font: 11px var(--mono); padding: 1px 7px; border-radius: 999px; background: var(--surface); color: var(--err); }
-.issue.warning .rule { color: var(--warn); }
-.issue.intent .rule { color: var(--accent); }
-
-/* ---------- results */
-.summary { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-.summary .sys { font-weight: 700; font-size: 20px; letter-spacing: -.02em; margin-right: 8px; }
-.chip { font: 12px var(--mono); padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line); background: var(--sunk); color: var(--muted); }
-.chip.ok { color: var(--ok); background: var(--ok-soft); border-color: transparent; }
-.chip.err { color: var(--err); background: var(--err-soft); border-color: transparent; }
-.chip.warn { color: var(--warn); background: var(--warn-soft); border-color: transparent; }
-.desc { color: var(--muted); margin: 10px 0 0; max-width: 90ch; }
-.desc b { color: var(--ink); font-weight: 600; }
-
-.tabs { display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 4px; margin: 16px 0 0; border-radius: 10px;
-  background: var(--sunk); border: 1px solid var(--line); }
-.tab { border: 0; background: none; padding: 6px 14px; cursor: pointer; color: var(--muted); border-radius: 7px; font-weight: 500; }
-.tab:hover { color: var(--ink); }
-.tab[aria-selected="true"] { color: var(--ink); background: var(--raised); box-shadow: var(--shadow); font-weight: 600; }
-.tab .badge { font: 11px var(--mono); margin-left: 5px; color: var(--accent); }
-.pane { padding-top: 16px; }
-.blocked { padding: 12px 14px; border-radius: 8px; background: var(--warn-soft); color: var(--ink); margin-bottom: 12px; }
-
-.canvas { position: relative; overflow: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--sunk);
-  background-image: radial-gradient(var(--dot) 1px, transparent 1px); background-size: 18px 18px; max-height: 70vh; }
-.stage { position: relative; margin: 0 auto; }
-.stage svg { position: absolute; inset: 0; overflow: visible; pointer-events: none; }
-.edge { fill: none; stroke: var(--line-strong); stroke-width: 1.6; }
-.edge.on-error { stroke: color-mix(in srgb, var(--err) 55%, var(--line)); stroke-dasharray: 5 4; }
-.edge.taken { stroke: var(--accent); stroke-width: 2.4; stroke-dasharray: none; }
-.arrow { fill: var(--line-strong); } .arrow.taken { fill: var(--accent); }
-.elabel { position: absolute; transform: translate(-50%, -50%); font: 10px var(--mono); padding: 2px 6px; border-radius: 999px;
-  background: var(--surface); border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
-.elabel.error { color: var(--err); }
-.elabel.taken { color: var(--accent); border-color: var(--accent); }
-.node { position: absolute; width: 196px; border: 1.5px solid var(--k); border-radius: 8px; padding: 7px 10px 8px; cursor: pointer;
-  text-align: left; background: color-mix(in srgb, var(--k) var(--tint), var(--surface)); box-shadow: var(--shadow); transition: transform .12s; }
-.node:hover { transform: translateY(-1px); }
-.node .k { display: block; font: 10px var(--mono); letter-spacing: .05em; text-transform: uppercase; color: var(--k); margin-bottom: 3px; }
-.node .l { display: block; font-size: 13px; font-weight: 600; line-height: 1.3; overflow-wrap: anywhere; }
-.node.trigger, .node.end { border-radius: 18px; }
-.node.branch { border-left-width: 5px; }
-.node.parallel, .node.join { border-style: dashed; }
-.node.visited { outline: 2px solid var(--accent); outline-offset: 1px; }
-.node.dim { opacity: .42; }
-.node.sel { box-shadow: 0 0 0 4px var(--hl); }
-
-.detail { margin-top: 14px; }
-.detail .title { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; margin-bottom: 8px; }
-.detail .title strong { font-size: 15px; }
-.link { border: 0; background: none; color: var(--accent); cursor: pointer; padding: 0; font: 12px var(--mono); }
-table.logic { width: 100%; border-collapse: collapse; font-size: 13px; }
-table.logic th { text-align: left; font: 10px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted);
-  padding: 0 8px 6px 0; border-bottom: 1px solid var(--line); }
-table.logic td { padding: 7px 8px 7px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
-table.logic td.f { font: 12px var(--mono); color: var(--muted); white-space: nowrap; }
-table.logic code { font: 12px/1.45 var(--mono); overflow-wrap: anywhere; background: none; padding: 0; }
-.scroll-x { overflow-x: auto; }
-
-.runs { display: grid; gap: 6px; }
-.run { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; text-align: left; cursor: pointer;
-  border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; background: var(--raised); }
-.run:hover { border-color: var(--line-strong); }
-.run[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
-.run .n { font: 12px var(--mono); }
-.run .p { color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pill { font: 11px var(--mono); padding: 2px 9px; border-radius: 999px; }
-.pill.ok { color: var(--ok); background: var(--ok-soft); } .pill.error { color: var(--err); background: var(--err-soft); }
-.kv { display: grid; grid-template-columns: 90px 1fr; gap: 6px 12px; margin-top: 14px; font-size: 13px; }
-.kv dt { color: var(--muted); font: 12px var(--mono); padding-top: 2px; }
-.kv dd { margin: 0; font: 12px/1.5 var(--mono); overflow-wrap: anywhere; }
-.kv ul { margin: 0; padding-left: 16px; }
-
-.verdict { padding: 10px 14px; border-radius: 8px; margin-bottom: 12px; font-size: 13px; }
-.verdict.verified { background: var(--ok-soft); } .verdict.mismatch { background: var(--err-soft); }
-.verdict.notverified { background: var(--warn-soft); }
-pre.code { margin: 0; padding: 14px; background: var(--sunk); border: 1px solid var(--line); border-radius: 10px;
-  font: 12px/1.55 var(--mono); overflow: auto; max-height: 64vh; tab-size: 4; }
-.empty { color: var(--muted); padding: 32px 4px; }
-.proj { display: grid; grid-template-columns: minmax(180px, 260px) minmax(0, 1fr); gap: 12px; align-items: start; }
-@media (max-width: 720px) { .proj { grid-template-columns: 1fr; } }
-
-/* screens preview: a small browser window showing the generated app */
-.shot { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface); box-shadow: var(--shadow); }
-.shot-bar { display: flex; align-items: center; gap: 6px; padding: 9px 12px; background: var(--sunk); border-bottom: 1px solid var(--line);
-  font: 12px var(--mono); color: var(--muted); }
-.shot-bar i { width: 10px; height: 10px; border-radius: 50%; background: var(--line-strong); display: inline-block; }
-.shot-bar span { margin-left: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 2px 10px; }
-.shot-app { display: flex; min-height: 340px; }
-.shot-nav { width: 170px; flex-shrink: 0; border-right: 1px solid var(--line); padding: 14px 8px; display: flex; flex-direction: column; gap: 2px; }
-.shot-nav b { font-size: 13px; padding: 0 8px 10px; }
-.shot-nav button { text-align: left; border: 0; background: none; color: var(--ink); padding: 7px 8px; border-radius: 6px; cursor: pointer; font: inherit; font-size: 13px; }
-.shot-nav button[aria-current="true"] { background: var(--accent); color: var(--accent-ink); }
-.shot-main { flex: 1; padding: 18px 22px; min-width: 0; }
-.shot-main h3 { margin: 0 0 14px; font-size: 17px; }
-.shot-form { display: flex; flex-direction: column; gap: 12px; max-width: 420px; }
-.shot-form label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: var(--muted); }
-.shot-form input, .shot-form select, .shot-form textarea { font: inherit; font-size: 13px; color: var(--ink); background: var(--sunk);
-  border: 1px solid var(--line); border-radius: 6px; padding: 7px 9px; }
-.shot-form input[type="checkbox"] { align-self: flex-start; }
-.shot-btn { align-self: flex-start; border: 0; border-radius: 6px; padding: 7px 14px; background: var(--accent); color: var(--accent-ink); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
-.shot-btn.ghost { background: none; color: var(--accent); border: 1px solid var(--line); padding: 4px 10px; font-weight: 500; }
-.shot-rows { border: 1px solid var(--line); border-radius: 8px; padding: 8px; }
-.shot-rows table, .shot-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.shot-rows th, .shot-table th { text-align: left; font-size: 11px; color: var(--muted); padding: 4px 6px; }
-.shot-rows td { padding: 3px; }
-.shot-rows td input { width: 100%; }
-.shot-table td { padding: 8px 6px; border-top: 1px solid var(--line); }
-.shot-table .num { text-align: right; font-variant-numeric: tabular-nums; }
-.shot-note { margin-top: 10px; font-size: 12px; color: var(--muted); }
-
-.tree { display: grid; gap: 1px; border: 1px solid var(--line); border-radius: 10px; padding: 6px; background: var(--sunk);
-  max-height: 64vh; overflow: auto; }
-.tree .dir { font: 11px var(--mono); color: var(--faint); padding: 8px 6px 2px; }
-.tree button { text-align: left; border: 0; background: none; padding: 3px 8px; border-radius: 5px; cursor: pointer;
-  font: 12px var(--mono); overflow-wrap: anywhere; }
-.tree button:hover { background: var(--surface); }
-.tree button[aria-current="true"] { background: var(--accent-soft); color: var(--accent); }
-.seg { display: inline-flex; padding: 3px; gap: 2px; border: 1px solid var(--line); border-radius: 9px; background: var(--sunk); }
-.seg button { border: 0; background: none; padding: 5px 12px; cursor: pointer; border-radius: 6px; color: var(--muted); font-weight: 500; }
-.seg button[aria-pressed="true"] { background: var(--raised); color: var(--ink); box-shadow: var(--shadow); }
-.fatal { padding: 12px 14px; border-radius: 8px; background: var(--err-soft); }
-details.llm summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 10px; }
-details.llm summary::-webkit-details-marker { display: none; }
-details.llm summary .chev { margin-left: auto; color: var(--muted); transition: transform .15s; }
-details.llm[open] summary .chev { transform: rotate(90deg); }
-details.llm[open] summary { margin-bottom: 10px; }
-@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
-
-/* ---------- docs view */
-#docs-view { background: var(--paper); }
-.docs-wrap { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 57px); }
-.docs-nav { position: sticky; top: 57px; height: calc(100vh - 57px); overflow-y: auto; padding: 20px 12px;
-  border-right: 1px solid var(--line); background: var(--surface); }
-.docs-nav-section { margin-bottom: 20px; }
-.docs-nav-label { font: 10px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--faint); padding: 0 8px 8px; display: block; }
-.docs-nav a { display: block; padding: 5px 8px; color: var(--muted); text-decoration: none; border-radius: 6px; font-size: 13px; font-weight: 500; }
-.docs-nav a:hover { color: var(--ink); background: var(--sunk); }
-.docs-nav a.current { color: var(--accent); background: var(--accent-soft); }
-.docs-body { max-width: 820px; padding: 40px 52px 80px; }
-.docs-body h1 { font-size: 28px; letter-spacing: -.03em; margin: 0 0 8px; }
-.docs-body .tagline { color: var(--muted); margin: 0 0 24px; font-size: 15px; max-width: 68ch; line-height: 1.6; }
-.docs-dl { display: inline-flex; align-items: center; gap: 8px; padding: 9px 18px; background: var(--accent); color: var(--accent-ink); border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 13.5px; margin-bottom: 36px; border: none; cursor: pointer; font: 600 13.5px var(--sans); transition: filter .15s; }
-.docs-dl:hover { filter: brightness(1.08); }
-.docs-body h2 { font-size: 20px; letter-spacing: -.02em; margin: 52px 0 12px; padding-top: 52px; border-top: 1px solid var(--line); scroll-margin-top: 72px; }
-.docs-body h2.first { border-top: none; margin-top: 0; padding-top: 0; }
-.docs-body h3 { font-size: 14.5px; font-weight: 650; margin: 28px 0 6px; color: var(--ink); scroll-margin-top: 72px; }
-.docs-body p { color: var(--muted); max-width: 70ch; margin: 0 0 12px; line-height: 1.65; }
-.docs-body p b, .docs-body p strong, .docs-body li b, .docs-body li strong { color: var(--ink); }
-.docs-body ul, .docs-body ol { color: var(--muted); padding-left: 18px; margin: 0 0 14px; }
-.docs-body li { margin-bottom: 5px; line-height: 1.65; max-width: 70ch; }
-.docs-body pre { margin: 8px 0 18px; padding: 16px 18px; background: var(--sunk); border: 1px solid var(--line); border-radius: 10px; font: 12.5px/1.65 var(--mono); overflow-x: auto; tab-size: 3; white-space: pre; }
-.docs-body table { border-collapse: collapse; width: 100%; margin: 8px 0 18px; font-size: 13px; }
-.docs-body th { text-align: left; font: 10px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 4px 16px 8px 0; border-bottom: 1px solid var(--line); }
-.docs-body td { padding: 8px 16px 8px 0; border-bottom: 1px solid var(--line); color: var(--muted); vertical-align: top; line-height: 1.5; }
-.docs-body td:first-child { font: 12.5px var(--mono); color: var(--ink); white-space: nowrap; }
-.docs-body .syntax { font: 12.5px/1.6 var(--mono); padding: 10px 14px; background: var(--raised); border: 1px solid var(--line-strong); border-radius: 8px; margin: 0 0 10px; overflow-x: auto; white-space: pre; }
-.btn-docs { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line-strong); background: var(--raised); border-radius: 8px; padding: 7px 14px; cursor: pointer; font-weight: 500; font: 500 14px var(--sans); transition: border-color .15s; color: var(--ink); }
-.btn-docs:hover { border-color: var(--accent); }
-.btn-docs[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
-
-/* ===================================================================
-   LANDING PAGE
-   =================================================================== */
-html { scroll-behavior: smooth; }
-
-/* nav */
-.site-nav { display: flex; align-items: center; gap: 2px; margin: 0 auto; }
-.site-nav a { padding: 6px 14px; border-radius: 8px; font: 500 13.5px var(--sans); color: var(--muted); text-decoration: none; transition: color .15s, background .15s; }
-.site-nav a:hover { color: var(--ink); background: var(--sunk); }
-
-/* hero */
-.lp-hero {
-  display: grid; grid-template-columns: 1fr 1fr;
-  align-items: center; gap: 56px;
-  padding: 72px 72px 80px;
-  min-height: calc(100vh - 57px);
-  position: relative; overflow: hidden;
-}
-.lp-hero::before {
-  content: ''; position: absolute; right: -80px; top: 50%; transform: translateY(-50%);
-  width: 60%; height: 100%;
-  background: radial-gradient(ellipse at center, color-mix(in srgb, var(--accent) 10%, transparent) 0%, transparent 70%);
-  pointer-events: none; z-index: 0;
-}
-.lp-hero::after {
-  content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 0;
-  background-image: radial-gradient(var(--dot) 1px, transparent 1px); background-size: 22px 22px;
-  mask-image: radial-gradient(ellipse 85% 100% at 62% 50%, rgba(0,0,0,.22) 0%, transparent 80%);
-  -webkit-mask-image: radial-gradient(ellipse 85% 100% at 62% 50%, rgba(0,0,0,.22) 0%, transparent 80%);
-}
-.hero-text { position: relative; z-index: 1; }
-.hero-badge { display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px 4px 8px; border: 1px solid var(--line-strong); border-radius: 99px; font: 500 12px var(--mono); color: var(--muted); margin-bottom: 28px; background: var(--surface); }
-.hero-badge-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 8px color-mix(in srgb, var(--ok) 55%, transparent); }
-.hero-h1 { font-family: var(--display); font-size: clamp(38px, 4.5vw, 62px); font-weight: 800; line-height: 1.05; letter-spacing: -.035em; margin: 0 0 22px; text-wrap: balance; }
-.hero-h1 em { font-style: normal; color: var(--accent); }
-.hero-lead { font-size: 16.5px; line-height: 1.75; color: var(--muted); max-width: 44ch; margin: 0 0 36px; }
-.hero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 24px; }
 .btn-lp-primary { display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; background: var(--accent); color: var(--accent-ink); border-radius: 10px; border: none; cursor: pointer; font: 700 15px var(--sans); text-decoration: none; transition: filter .15s; }
 .btn-lp-primary:hover { filter: brightness(1.1); }
 .btn-lp-secondary { display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; border: 1px solid var(--line-strong); border-radius: 10px; font: 500 15px var(--sans); text-decoration: none; color: var(--ink); background: var(--surface); transition: border-color .15s, color .15s; }
 .btn-lp-secondary:hover { border-color: var(--accent); color: var(--accent); }
-.hero-langs { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.hero-langs-lbl { font: 12px var(--mono); color: var(--faint); }
-.lang-pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); font: 12px var(--mono); color: var(--muted); }
 
-/* hero demo */
-.hero-demo { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 0; }
-.demo-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; box-shadow: 0 4px 24px color-mix(in srgb, #000 18%, transparent), 0 1px 3px color-mix(in srgb, #000 12%, transparent); }
+/* syntax tokens */
+.tk-kw  { color: var(--call); }    .tk-str  { color: var(--ok); }
+.tk-num { color: var(--accent); }  .tk-fn   { color: var(--compute); }
+.tk-ty  { color: var(--trigger); } .tk-hd   { color: var(--accent); font-weight: 600; }
+.tk-dc  { color: var(--validate); }.tk-dk   { color: var(--call); }
+.tk-cm  { color: var(--faint); }
+
+/* ---- nav ---- */
+header { position: sticky; top: 0; z-index: 100; display: flex; align-items: center; gap: 10px 20px;
+  padding: 12px 32px; background: color-mix(in srgb, var(--surface) 88%, transparent); backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line); }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); }
+.brand svg { width: 28px; height: 28px; flex-shrink: 0; }
+.brand-word { font-family: var(--display); font-size: 18px; font-weight: 800; letter-spacing: -.03em; }
+.site-nav { display: flex; align-items: center; gap: 2px; margin: 0 auto; }
+.site-nav a { padding: 6px 14px; border-radius: 8px; font: 500 13.5px var(--sans); color: var(--muted); text-decoration: none; transition: color .15s, background .15s; }
+.site-nav a:hover { color: var(--ink); background: var(--sunk); }
+.theme { display: inline-flex; padding: 3px; gap: 2px; border: 1px solid var(--line); border-radius: 999px; background: var(--sunk); }
+.theme button { display: grid; place-items: center; width: 30px; height: 26px; border: 0; border-radius: 999px; background: none; color: var(--muted); cursor: pointer; }
+.theme button svg { width: 14px; height: 14px; }
+.theme button[aria-pressed="true"] { background: var(--raised); color: var(--ink); box-shadow: var(--shadow); }
+.nav-cta { padding: 8px 16px; font-size: 13.5px; }
+
+/* ---- hero ---- */
+.lp-hero { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 64px;
+  padding: 80px 72px 96px; min-height: calc(100vh - 56px); position: relative; overflow: hidden; }
+.lp-hero::before { content: ''; position: absolute; right: -100px; top: 50%; transform: translateY(-50%);
+  width: 65%; height: 120%; pointer-events: none; z-index: 0;
+  background: radial-gradient(ellipse at center, color-mix(in srgb, var(--accent) 9%, transparent) 0%, transparent 70%); }
+.lp-hero::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background-image: radial-gradient(var(--dot) 1px, transparent 1px); background-size: 22px 22px;
+  mask-image: radial-gradient(ellipse 85% 100% at 65% 50%, rgba(0,0,0,.2) 0%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse 85% 100% at 65% 50%, rgba(0,0,0,.2) 0%, transparent 80%); }
+
+.hero-text { position: relative; z-index: 1; }
+.hero-badge { display: inline-flex; align-items: center; gap: 8px; padding: 4px 14px 4px 8px;
+  border: 1px solid var(--line-strong); border-radius: 99px; font: 500 12px var(--mono);
+  color: var(--muted); margin-bottom: 28px; background: var(--surface); }
+.hero-badge-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ok);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--ok) 55%, transparent); }
+.hero-h1 { font-family: var(--display); font-size: clamp(36px, 4.5vw, 62px); font-weight: 800;
+  line-height: 1.05; letter-spacing: -.04em; margin: 0 0 24px; text-wrap: balance; }
+.hero-h1 em { font-style: normal; color: var(--accent); }
+.hero-lead { font-size: 17px; line-height: 1.75; color: var(--muted); max-width: 44ch; margin: 0 0 36px; }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 32px; }
+.hero-outputs { display: flex; flex-wrap: wrap; gap: 8px; }
+.hero-out-lbl { font: 12px var(--mono); color: var(--faint); align-self: center; }
+.out-tag { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); font: 12px var(--mono); color: var(--muted); }
+.out-tag-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+/* hero demo panel */
+.hero-demo { position: relative; z-index: 1; }
+.demo-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
+  box-shadow: 0 4px 24px color-mix(in srgb, #000 16%, transparent), 0 1px 3px color-mix(in srgb, #000 10%, transparent); }
 .demo-titlebar { display: flex; align-items: center; gap: 8px; padding: 9px 14px; background: var(--sunk); border-bottom: 1px solid var(--line); }
 .demo-circles { display: flex; gap: 5px; }
 .demo-circles span { width: 10px; height: 10px; border-radius: 50%; }
@@ -339,103 +129,118 @@ html { scroll-behavior: smooth; }
 .demo-circles span:nth-child(3) { background: #22c55e; }
 .demo-fname { font: 12px var(--mono); color: var(--faint); margin-left: 4px; }
 .demo-pre { margin: 0; padding: 14px 18px; font: 12.5px/1.7 var(--mono); overflow: hidden; white-space: pre; tab-size: 2; }
-.demo-compiled { display: flex; align-items: center; gap: 12px; padding: 8px 16px; }
-.demo-compiled::before, .demo-compiled::after { content: ''; flex: 1; height: 1px; background: var(--line); }
-.demo-compiled-lbl { font: 700 10.5px var(--mono); letter-spacing: .07em; text-transform: uppercase; color: var(--accent); white-space: nowrap; }
+.demo-arrow { display: flex; align-items: center; gap: 12px; padding: 8px 16px; }
+.demo-arrow::before, .demo-arrow::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+.demo-arrow-lbl { font: 700 10.5px var(--mono); letter-spacing: .07em; text-transform: uppercase; color: var(--accent); white-space: nowrap; }
 .demo-tabs { display: flex; border-bottom: 1px solid var(--line); }
 .demo-tab { padding: 7px 14px; font: 12px var(--mono); color: var(--muted); border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color .12s; }
 .demo-tab.on { color: var(--accent); border-bottom-color: var(--accent); }
-.demo-tab:hover:not(.on) { color: var(--ink); }
 .demo-panes > div { display: none; }
 .demo-panes > div.on { display: block; }
 
-/* syntax tokens */
-.tk-kw { color: var(--call); }
-.tk-str { color: var(--ok); }
-.tk-num { color: var(--accent); }
-.tk-fn { color: var(--compute); }
-.tk-ty { color: var(--trigger); }
-.tk-hd { color: var(--accent); font-weight: 600; }
-.tk-dc { color: var(--validate); }
-.tk-dk { color: var(--call); }
-.tk-cm { color: var(--faint); }
+/* ---- problem section ---- */
+.lp-problem { border-top: 1px solid var(--line); background: var(--surface); }
+.problem-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+.problem-cell { background: var(--surface); padding: 32px 28px; }
+.problem-cell-old { background: var(--err-soft); }
+.problem-badge { display: inline-flex; align-items: center; gap: 6px; font: 700 11px var(--mono); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 14px; padding: 3px 10px; border-radius: 99px; }
+.badge-before { color: var(--err); background: var(--err-soft); border: 1px solid color-mix(in srgb, var(--err) 20%, transparent); }
+.badge-after  { color: var(--ok);  background: var(--ok-soft);  border: 1px solid color-mix(in srgb, var(--ok) 20%, transparent); }
+.problem-cell h3 { font: 700 15px var(--sans); margin: 0 0 8px; }
+.problem-cell p  { font-size: 13.5px; color: var(--muted); margin: 0; line-height: 1.65; }
 
-/* features */
-.lp-features { padding: 80px 72px; border-top: 1px solid var(--line); }
-.lp-eyebrow { font: 700 11px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin: 0 0 12px; }
-.lp-heading { font-family: var(--display); font-size: clamp(26px, 3vw, 40px); font-weight: 800; letter-spacing: -.025em; margin: 0 0 48px; line-height: 1.15; text-wrap: balance; }
-.lp-feat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-.lp-feat-card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 26px 22px; transition: border-color .2s, transform .2s; }
-.lp-feat-card:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); transform: translateY(-2px); }
+/* ---- what you get ---- */
+.lp-outputs { border-top: 1px solid var(--line); }
+.outputs-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.output-card { border: 1px solid var(--line); border-radius: 18px; overflow: hidden; background: var(--surface); box-shadow: var(--shadow); transition: transform .2s, box-shadow .2s; }
+.output-card:hover { transform: translateY(-3px); box-shadow: 0 12px 40px color-mix(in srgb, #000 12%, transparent); }
+.output-card-head { padding: 22px 24px 18px; border-bottom: 1px solid var(--line); }
+.output-card-icon { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; margin-bottom: 14px; }
+.output-card-icon svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.output-card h3 { font: 700 16px var(--sans); margin: 0 0 6px; }
+.output-card p  { font-size: 13.5px; color: var(--muted); margin: 0; line-height: 1.65; }
+.output-card-tags { padding: 16px 24px; display: flex; flex-wrap: wrap; gap: 6px; }
+.output-tag { font: 12px var(--mono); padding: 3px 10px; border-radius: 6px; border: 1px solid var(--line); color: var(--muted); background: var(--sunk); }
+
+/* ---- how it works ---- */
+.lp-how { border-top: 1px solid var(--line); background: var(--surface); }
+.how-steps { display: grid; grid-template-columns: 1fr 32px 1fr 32px 1fr 32px 1fr; gap: 16px; align-items: start; margin-top: 48px; }
+.how-step-n { width: 38px; height: 38px; border-radius: 12px; background: var(--accent); color: var(--accent-ink); font: 700 17px var(--sans); display: grid; place-items: center; margin-bottom: 14px; }
+.how-step h3 { font: 700 16px var(--sans); margin: 0 0 8px; letter-spacing: -.01em; }
+.how-step p  { font-size: 14px; color: var(--muted); margin: 0; line-height: 1.65; max-width: 28ch; }
+.how-arrow { display: grid; place-items: center; padding-top: 8px; color: var(--line-strong); }
+.how-arrow svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.5; stroke-linecap: round; }
+
+/* ---- features ---- */
+.lp-features { border-top: 1px solid var(--line); }
+.feat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 48px; }
+.feat-card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 26px 22px; transition: border-color .2s, transform .2s; }
+.feat-card:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); transform: translateY(-2px); }
 .feat-ico { width: 42px; height: 42px; border-radius: 11px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; margin-bottom: 14px; }
 .feat-ico svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.lp-feat-card h3 { font: 700 15px var(--sans); margin: 0 0 8px; letter-spacing: -.01em; }
-.lp-feat-card p { font-size: 13.5px; color: var(--muted); margin: 0; line-height: 1.65; }
+.feat-card h3 { font: 700 15px var(--sans); margin: 0 0 8px; letter-spacing: -.01em; }
+.feat-card p  { font-size: 13.5px; color: var(--muted); margin: 0; line-height: 1.65; }
 
-/* how it works */
-.lp-how { padding: 80px 72px; border-top: 1px solid var(--line); background: var(--surface); }
-.lp-how-steps { display: grid; grid-template-columns: 1fr 40px 1fr 40px 1fr; align-items: start; gap: 12px; margin-top: 40px; }
-.how-step-n { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 12px; background: var(--accent); color: var(--accent-ink); font: 700 17px var(--sans); margin-bottom: 14px; }
-.lp-how-step h3 { font: 700 16px var(--sans); margin: 0 0 8px; letter-spacing: -.01em; }
-.lp-how-step p { font-size: 14px; color: var(--muted); margin: 0; line-height: 1.65; max-width: 28ch; }
-.lp-how-arrow { display: grid; place-items: center; padding-top: 10px; color: var(--line-strong); }
-.lp-how-arrow svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.5; stroke-linecap: round; }
+/* ---- CTA section ---- */
+.lp-cta { border-top: 1px solid var(--line); background: var(--accent); color: var(--accent-ink); }
+.lp-cta .lp-heading { color: var(--accent-ink); margin-bottom: 12px; }
+.lp-cta .lp-sub { color: color-mix(in srgb, var(--accent-ink) 75%, transparent); margin-bottom: 36px; }
+.btn-cta-white { display: inline-flex; align-items: center; gap: 8px; padding: 14px 28px; background: var(--accent-ink); color: var(--accent); border-radius: 10px; border: none; cursor: pointer; font: 700 16px var(--sans); text-decoration: none; transition: opacity .15s; }
+.btn-cta-white:hover { opacity: .9; }
+.btn-cta-ghost { display: inline-flex; align-items: center; gap: 8px; padding: 14px 24px; background: transparent; color: var(--accent-ink); border-radius: 10px; border: 2px solid color-mix(in srgb, var(--accent-ink) 35%, transparent); font: 600 15px var(--sans); text-decoration: none; transition: border-color .15s; }
+.btn-cta-ghost:hover { border-color: color-mix(in srgb, var(--accent-ink) 65%, transparent); }
 
-/* studio section */
-.lp-studio { border-top: 1px solid var(--line); }
-.lp-studio-intro { padding: 64px 72px 4px; display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
-.lp-studio-intro h2 { font-family: var(--display); font-size: clamp(24px, 2.5vw, 34px); font-weight: 800; letter-spacing: -.025em; margin: 0 0 6px; }
-.lp-studio-intro p { font-size: 15px; color: var(--muted); margin: 0; max-width: 54ch; line-height: 1.6; }
-
-/* footer */
-.lp-footer { border-top: 1px solid var(--line); padding: 32px 72px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 40px; }
+/* ---- footer ---- */
+.lp-footer { border-top: 1px solid var(--line); padding: 28px 72px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 40px; }
 .lp-footer-brand { font-family: var(--display); font-weight: 800; font-size: 16px; letter-spacing: -.02em; }
-.lp-footer-copy { font-size: 12.5px; color: var(--faint); }
+.lp-footer-copy  { font-size: 12.5px; color: var(--faint); }
 .lp-footer-links { display: flex; gap: 20px; flex-wrap: wrap; margin-left: auto; }
 .lp-footer-links a { color: var(--muted); font-size: 13.5px; text-decoration: none; transition: color .15s; }
 .lp-footer-links a:hover { color: var(--ink); }
 
-/* studio back-link */
-.site-nav-back { font: 500 13.5px var(--sans); color: var(--muted); text-decoration: none; padding: 6px 12px; border-radius: 8px; transition: color .15s; }
-.site-nav-back:hover { color: var(--ink); background: var(--sunk); }
-
-/* responsive */
+/* ---- responsive ---- */
 @media (max-width: 1200px) {
-  .lp-hero, .lp-features, .lp-how, .lp-studio-intro, .lp-footer { padding-left: 40px; padding-right: 40px; }
+  .lp-hero, .pad, .pad-sm, .lp-footer { padding-left: 40px; padding-right: 40px; }
+}
+@media (max-width: 1100px) {
+  .how-steps { grid-template-columns: 1fr 32px 1fr; }
 }
 @media (max-width: 960px) {
-  .lp-hero { grid-template-columns: 1fr; min-height: 0; padding: 48px 24px 60px; }
+  .lp-hero { grid-template-columns: 1fr; min-height: 0; padding: 48px 24px 64px; }
   .hero-demo { display: none; }
-  .lp-feat-grid { grid-template-columns: 1fr 1fr; }
-  .lp-how-steps { grid-template-columns: 1fr; }
-  .lp-how-arrow { display: none; }
-  .lp-features, .lp-how { padding: 56px 24px; }
-  .lp-studio-intro { padding: 40px 24px 4px; }
-  .lp-footer { padding: 28px 24px; }
+  .outputs-grid, .feat-grid { grid-template-columns: 1fr 1fr; }
+  .problem-grid { grid-template-columns: 1fr; }
+  .how-steps { grid-template-columns: 1fr; }
+  .how-arrow { display: none; }
+  .pad, .pad-sm { padding: 56px 24px; }
+  .lp-footer { padding: 24px 24px; }
   .site-nav { display: none; }
 }
-@media (max-width: 560px) {
-  .lp-feat-grid { grid-template-columns: 1fr; }
+@media (max-width: 600px) {
+  .outputs-grid, .feat-grid { grid-template-columns: 1fr; }
 }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
 <body>
+
+<!-- NAV -->
 <header>
-  <div class="brand">
+  <a href="/" class="brand">
     <svg viewBox="0 0 32 32" aria-hidden="true">
       <rect width="32" height="32" rx="9" fill="var(--accent)"/>
       <path d="M10 7c7 1 12 6 12 13 0 2-.4 3.6-1.2 5l-2.3-1.2c.6-1.1.9-2.4.9-3.8 0-5.4-3.8-9.3-9.4-10.2z" fill="var(--accent-ink)"/>
       <path d="M18.7 24.8 16 27l.3-3.4" fill="none" stroke="var(--accent-ink)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
-    <span class="word">Danta</span>
-  </div>
+    <span class="brand-word">Danta</span>
+  </a>
   <nav class="site-nav" aria-label="Site">
-    <a href="#features">Features</a>
+    <a href="#problem">Problem</a>
+    <a href="#outputs">What you get</a>
     <a href="#how">How it works</a>
-    <a href="#studio">Studio</a>
   </nav>
-  <a href="studio.html" class="btn-lp-primary" style="padding:8px 16px;font-size:13.5px">Open Studio →</a>
-  <div class="theme" role="group" aria-label="Colour theme">
+  <a href="studio.html" class="btn-lp-primary nav-cta">Open Studio →</a>
+  <div class="theme" role="group" aria-label="Colour theme" style="margin-left:8px">
     <button data-theme-set="system" title="Match the system" aria-label="System theme">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></button>
     <button data-theme-set="light" title="Light" aria-label="Light theme">
@@ -448,44 +253,49 @@ html { scroll-behavior: smooth; }
 <!-- HERO -->
 <section class="lp-hero">
   <div class="hero-text">
-    <div class="hero-badge"><span class="hero-badge-dot"></span>Deterministic · No models · No API keys</div>
-    <h1 class="hero-h1">Write a spec.<br><em>Get production code.</em></h1>
-    <p class="hero-lead">Plain-text Markdown that compiles to Python, JavaScript, and Java. The same spec always produces the same code — a compiler, not a wizard.</p>
+    <div class="hero-badge"><span class="hero-badge-dot"></span>Deterministic · No ML · No API keys</div>
+    <h1 class="hero-h1">One spec.<br><em>The full stack.</em></h1>
+    <p class="hero-lead">Write a plain-text Markdown spec. Danta compiles it to a working backend API, an admin panel, and a customer-facing website — in Python, JavaScript, and Java. Same spec, same code, every time.</p>
     <div class="hero-actions">
       <a href="studio.html" class="btn-lp-primary">Try the Studio →</a>
       <a href="danta-skill.md" download="danta-skill.md" class="btn-lp-secondary">↓ LLM skill file</a>
     </div>
-    <div class="hero-langs">
-      <span class="hero-langs-lbl">Compiles to</span>
-      <span class="lang-pill">Python</span>
-      <span class="lang-pill">JavaScript</span>
-      <span class="lang-pill">Java</span>
+    <div class="hero-outputs">
+      <span class="hero-out-lbl">Compiles to</span>
+      <span class="out-tag"><span class="out-tag-dot" style="background:#3b82f6"></span>Python API</span>
+      <span class="out-tag"><span class="out-tag-dot" style="background:#f59e0b"></span>JS API</span>
+      <span class="out-tag"><span class="out-tag-dot" style="background:#ef4444"></span>Java API</span>
+      <span class="out-tag"><span class="out-tag-dot" style="background:#8b5cf6"></span>Admin panel</span>
+      <span class="out-tag"><span class="out-tag-dot" style="background:#10b981"></span>Storefront</span>
     </div>
   </div>
   <div class="hero-demo" aria-hidden="true">
     <div class="demo-card">
       <div class="demo-titlebar">
         <div class="demo-circles"><span></span><span></span><span></span></div>
-        <span class="demo-fname">order-api.md</span>
+        <span class="demo-fname">shop.spec.md</span>
       </div>
       <pre class="demo-pre"><span class="tk-dc">Spec:</span> danta/0.1
 
-<span class="tk-hd"># System: order-api</span>
-REST API for placing orders.
+<span class="tk-hd"># System: shop</span>
+Online shop with orders and inventory.
 
 <span class="tk-hd">## Flow: place_order</span>
 <span class="tk-dc">Trigger:</span> POST /orders with
-   order_id str, email str, amount int
-<span class="tk-dc">Mode:</span> sync
+   customer_email str, total int
 <span class="tk-dc">Steps:</span>
-1. <span class="tk-dk">Validate:</span> `amount &gt; 0`. Otherwise
-   stop with error <span class="tk-str">"invalid amount"</span>.
-2. <span class="tk-dk">Call</span> payments.charge with
-   order_id, amount.
-3. <span class="tk-dk">Respond with</span> order_id, status.</pre>
+1. <span class="tk-dk">Validate:</span> `total &gt; 0`.
+2. <span class="tk-dk">Save</span> order with customer_email, total,
+   status <span class="tk-str">"pending"</span>.
+3. <span class="tk-dk">Email</span> customer_email: <span class="tk-str">"Order confirmed."</span>
+4. <span class="tk-dk">Respond with</span> order_id, status.
+
+<span class="tk-hd">## Screen: orders</span>
+<span class="tk-dc">Title:</span> <span class="tk-str">Order Management</span>
+<span class="tk-dc">List:</span> order columns order_id, total, status</pre>
     </div>
-    <div class="demo-compiled">
-      <span class="demo-compiled-lbl">compiled →</span>
+    <div class="demo-arrow">
+      <span class="demo-arrow-lbl">compiled →</span>
     </div>
     <div class="demo-card">
       <div class="demo-tabs" id="demo-tabs">
@@ -496,97 +306,212 @@ REST API for placing orders.
       <div class="demo-panes" id="demo-panes">
         <div class="on"><pre class="demo-pre"><span class="tk-fn">@router.post</span>(<span class="tk-str">"/orders"</span>)
 <span class="tk-kw">async def</span> <span class="tk-fn">place_order</span>(
-    order_id: <span class="tk-ty">str</span>,
-    email: <span class="tk-ty">str</span>,
-    amount: <span class="tk-ty">int</span>,
+    customer_email: <span class="tk-ty">str</span>,
+    total: <span class="tk-ty">int</span>,
 ):
-    <span class="tk-kw">if not</span> (amount &gt; <span class="tk-num">0</span>):
-        <span class="tk-kw">raise</span> HTTPException(<span class="tk-num">400</span>,
-            detail=<span class="tk-str">"invalid amount"</span>)
-    charge = <span class="tk-kw">await</span> payments.charge(
-        order_id=order_id, amount=amount)
+    <span class="tk-kw">if not</span> (total &gt; <span class="tk-num">0</span>):
+        <span class="tk-kw">raise</span> HTTPException(<span class="tk-num">400</span>)
+    order_id = store.save(<span class="tk-str">"order"</span>, {
+        <span class="tk-str">"customer_email"</span>: customer_email,
+        <span class="tk-str">"total"</span>: total,
+        <span class="tk-str">"status"</span>: <span class="tk-str">"pending"</span>})
+    email(customer_email,
+          <span class="tk-str">"Order confirmed."</span>)
     <span class="tk-kw">return</span> {<span class="tk-str">"order_id"</span>: order_id,
             <span class="tk-str">"status"</span>: <span class="tk-str">"ok"</span>}</pre></div>
-        <div><pre class="demo-pre">router.post(<span class="tk-str">"/orders"</span>, <span class="tk-kw">async</span> (req, res) =&gt; {
-  <span class="tk-kw">const</span> { order_id, email, amount } = req.body;
-  <span class="tk-kw">if</span> (!(amount &gt; <span class="tk-num">0</span>)) {
-    res.status(<span class="tk-num">400</span>).json({
-      error: <span class="tk-str">"invalid amount"</span> });
-    <span class="tk-kw">return</span>;
-  }
-  <span class="tk-kw">const</span> charge = <span class="tk-kw">await</span> payments.charge({
-    order_id, amount });
+        <div><pre class="demo-pre">router.post(<span class="tk-str">"/orders"</span>, <span class="tk-kw">async</span> (req, res) => {
+  <span class="tk-kw">const</span> { customer_email, total } = req.body;
+  <span class="tk-kw">if</span> (!(total &gt; <span class="tk-num">0</span>))
+    <span class="tk-kw">return</span> res.status(<span class="tk-num">400</span>).json({});
+  <span class="tk-kw">const</span> order_id = store.save(<span class="tk-str">"order"</span>, {
+    customer_email, total,
+    status: <span class="tk-str">"pending"</span> });
+  <span class="tk-kw">await</span> email(customer_email,
+              <span class="tk-str">"Order confirmed."</span>);
   res.json({ order_id, status: <span class="tk-str">"ok"</span> });
 });</pre></div>
         <div><pre class="demo-pre"><span class="tk-dc">@PostMapping</span>(<span class="tk-str">"/orders"</span>)
 <span class="tk-kw">public</span> ResponseEntity&lt;?&gt; placeOrder(
     <span class="tk-dc">@RequestBody</span> OrderRequest req) {
-  <span class="tk-kw">if</span> (!(req.getAmount() &gt; <span class="tk-num">0</span>)) {
-    <span class="tk-kw">return</span> ResponseEntity.badRequest()
-      .body(Map.of(<span class="tk-str">"error"</span>,
-            <span class="tk-str">"invalid amount"</span>));
-  }
-  payments.charge(req.getOrderId(),
-                  req.getAmount());
-  <span class="tk-kw">return</span> ResponseEntity.ok(Map.of(
-    <span class="tk-str">"order_id"</span>, req.getOrderId(),
-    <span class="tk-str">"status"</span>, <span class="tk-str">"ok"</span>));
+  <span class="tk-kw">if</span> (!(req.getTotal() &gt; <span class="tk-num">0</span>))
+    <span class="tk-kw">return</span> ResponseEntity
+        .badRequest().build();
+  var id = store.save(<span class="tk-str">"order"</span>, Map.of(
+    <span class="tk-str">"customer_email"</span>, req.getEmail(),
+    <span class="tk-str">"total"</span>, req.getTotal(),
+    <span class="tk-str">"status"</span>, <span class="tk-str">"pending"</span>));
+  email(req.getEmail(),
+        <span class="tk-str">"Order confirmed."</span>);
+  <span class="tk-kw">return</span> ResponseEntity.ok(
+    Map.of(<span class="tk-str">"order_id"</span>, id));
 }</pre></div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- FEATURES -->
-<section id="features" class="lp-features">
-  <p class="lp-eyebrow">Why Danta</p>
-  <h2 class="lp-heading">A compiler, not a wizard</h2>
-  <div class="lp-feat-grid">
-    <div class="lp-feat-card">
-      <div class="feat-ico"><svg viewBox="0 0 24 24"><path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg></div>
-      <h3>Deterministic</h3>
-      <p>The same spec always produces the same code. No model inference, no randomness — a pure compiler you can reason about, diff, and test.</p>
+<!-- PROBLEM -->
+<section id="problem" class="lp-problem pad">
+  <p class="lp-eyebrow">The problem</p>
+  <h2 class="lp-heading">Building software is still mostly boilerplate</h2>
+  <p class="lp-sub">LLMs help, but they generate different code every run. Frameworks get you started, but you still wire everything together by hand. Danta closes the gap.</p>
+  <div class="problem-grid">
+    <div class="problem-cell problem-cell-old">
+      <div class="problem-badge badge-before">Before</div>
+      <h3>LLM generates code</h3>
+      <p>You describe a feature. The LLM writes something plausible. Next run it writes something different. You review, tweak, test — and repeat for Python, JS, and Java separately.</p>
     </div>
-    <div class="lp-feat-card">
-      <div class="feat-ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 9h6M9 12h6M9 15h4"/></svg></div>
-      <h3>Plain-text specs</h3>
-      <p>Specs are Markdown files you can read, diff, and version in any editor. No proprietary formats, no visual builders, no lock-in.</p>
+    <div class="problem-cell problem-cell-old">
+      <div class="problem-badge badge-before">Before</div>
+      <h3>Three separate stacks</h3>
+      <p>Your backend team uses Python. Your clients want Java. A contractor uses Node. Every time requirements change, you update three codebases, three test suites, three Docker configs.</p>
     </div>
-    <div class="lp-feat-card">
-      <div class="feat-ico"><svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
-      <h3>Three languages</h3>
-      <p>One spec compiles to FastAPI Python, Express JavaScript, and Spring Boot Java — with test suites and CI configs in every download.</p>
+    <div class="problem-cell problem-cell-old">
+      <div class="problem-badge badge-before">Before</div>
+      <h3>No frontend out of the box</h3>
+      <p>The API is one project. The admin dashboard is another. The customer-facing storefront is a third. Each is built, styled, and wired up separately — weeks of boilerplate before you ship anything.</p>
     </div>
-    <div class="lp-feat-card">
-      <div class="feat-ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
-      <h3>Browser-native</h3>
-      <p>Pyodide runs the Python compiler in WebAssembly, right in your browser. No server, no sign-up — your specs never leave your machine.</p>
+    <div class="problem-cell">
+      <div class="problem-badge badge-after">Danta</div>
+      <h3>Deterministic compilation</h3>
+      <p>The same spec always produces the same code. Every field, every validation, every test. Review the spec, not every generated file. Diff your specs in Git like any other source of truth.</p>
+    </div>
+    <div class="problem-cell">
+      <div class="problem-badge badge-after">Danta</div>
+      <h3>One spec → three backends</h3>
+      <p>Write your flows once. Danta compiles to Python (FastAPI), JavaScript (Express), and Java (Spring Boot) simultaneously — with test suites, OpenAPI docs, and Docker configs included.</p>
+    </div>
+    <div class="problem-cell">
+      <div class="problem-badge badge-after">Danta</div>
+      <h3>Backend + admin + storefront</h3>
+      <p>Add a backend spec for your API logic. Add a design spec for your storefront. Danta wires them together and ships a complete system — admin panel on port 3001, storefront on port 3000, API on port 8080.</p>
+    </div>
+  </div>
+</section>
+
+<!-- WHAT YOU GET -->
+<section id="outputs" class="lp-outputs pad">
+  <p class="lp-eyebrow">What you get</p>
+  <h2 class="lp-heading">One ZIP. Everything running.</h2>
+  <p class="lp-sub">Download a project ZIP from the Studio. Unzip, run <code>docker compose up</code> — that's it. Three separate services, fully wired, ready to test.</p>
+  <div class="outputs-grid">
+    <div class="output-card">
+      <div class="output-card-head">
+        <div class="output-card-icon" style="background:#eff6ff;color:#3b82f6">
+          <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+        <h3>Backend API</h3>
+        <p>Every flow becomes a validated HTTP endpoint. Validation, persistence, emails, queues — all generated from your spec steps. Identical logic across all three runtimes.</p>
+      </div>
+      <div class="output-card-tags">
+        <span class="output-tag">FastAPI Python</span>
+        <span class="output-tag">Express JS</span>
+        <span class="output-tag">Spring Boot</span>
+        <span class="output-tag">OpenAPI docs</span>
+        <span class="output-tag">Test suite</span>
+        <span class="output-tag">Dockerfile</span>
+      </div>
+    </div>
+    <div class="output-card">
+      <div class="output-card-head">
+        <div class="output-card-icon" style="background:#f5f3ff;color:#7c3aed">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        </div>
+        <h3>Admin Panel</h3>
+        <p>Add <code>## Screen:</code> sections to the backend spec. Danta generates a React dashboard with forms and data tables — wired to your API, zero glue code written.</p>
+      </div>
+      <div class="output-card-tags">
+        <span class="output-tag">React + Vite</span>
+        <span class="output-tag">Forms per flow</span>
+        <span class="output-tag">Data tables</span>
+        <span class="output-tag">Port 3001</span>
+      </div>
+    </div>
+    <div class="output-card">
+      <div class="output-card-head">
+        <div class="output-card-icon" style="background:#f0fdf4;color:#16a34a">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        </div>
+        <h3>Customer Storefront</h3>
+        <p>Write a design spec: brand colors, screens, product cards, hero banners, pricing tiers. Danta compiles it to a styled HTML frontend served by nginx — live data from your API.</p>
+      </div>
+      <div class="output-card-tags">
+        <span class="output-tag">Standalone HTML</span>
+        <span class="output-tag">nginx + Docker</span>
+        <span class="output-tag">Live data</span>
+        <span class="output-tag">Port 3000</span>
+        <span class="output-tag">Dark mode</span>
+      </div>
     </div>
   </div>
 </section>
 
 <!-- HOW IT WORKS -->
-<section id="how" class="lp-how">
+<section id="how" class="lp-how pad">
   <p class="lp-eyebrow">How it works</p>
-  <h2 class="lp-heading">From idea to running code<br>in three steps</h2>
-  <div class="lp-how-steps">
-    <div class="lp-how-step">
+  <h2 class="lp-heading">From idea to running stack<br>in four steps</h2>
+  <div class="how-steps">
+    <div class="how-step">
       <div class="how-step-n">1</div>
-      <h3>Write a spec</h3>
-      <p>Describe your system in Danta's plain-text grammar. Use an LLM with the skill file to draft one in seconds — paste your use case, get a spec back.</p>
+      <h3>Describe your system</h3>
+      <p>Write a Danta spec in Markdown. Use an LLM with our skill file — paste your use case, get a spec back in seconds.</p>
     </div>
-    <div class="lp-how-arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
-    <div class="lp-how-step">
+    <div class="how-arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+    <div class="how-step">
       <div class="how-step-n">2</div>
-      <h3>Paste &amp; build</h3>
-      <p>Paste your spec into the Studio below. The compiler validates every step, builds a flow graph, and reports errors with line numbers.</p>
+      <h3>Build in the Studio</h3>
+      <p>Paste your spec into the Studio. The compiler validates every step, draws the flow graph, and shows test runs — errors with exact line numbers.</p>
     </div>
-    <div class="lp-how-arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
-    <div class="lp-how-step">
+    <div class="how-arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+    <div class="how-step">
       <div class="how-step-n">3</div>
-      <h3>Download the code</h3>
-      <p>Get a .zip with Python, JavaScript, or Java — plus test suites and CI configs. One command to run locally, zero setup required.</p>
+      <h3>Design the storefront</h3>
+      <p>Optionally add a design spec to generate the customer-facing website. Choose colors, add product cards, pricing tables, and testimonials.</p>
     </div>
+    <div class="how-arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+    <div class="how-step">
+      <div class="how-step-n">4</div>
+      <h3>Download and ship</h3>
+      <p>Download the ZIP. Run <code>docker compose up</code>. Your complete stack is live: API, admin panel, and storefront — all from one spec.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="lp-features pad">
+  <p class="lp-eyebrow">Why Danta</p>
+  <h2 class="lp-heading">A compiler, not a wizard</h2>
+  <div class="feat-grid">
+    <div class="feat-card">
+      <div class="feat-ico"><svg viewBox="0 0 24 24"><path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg></div>
+      <h3>Deterministic</h3>
+      <p>The same spec always produces the same code. No inference, no randomness. Pure compiler: version it, diff it, review it.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-ico"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+      <h3>Plain-text specs</h3>
+      <p>Specs are Markdown files. Readable, diffable, version-controlled. No proprietary formats, no visual builders, no lock-in.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-ico"><svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
+      <h3>LLM-ready</h3>
+      <p>Download the skill file, paste it into any LLM, describe your use case — get a valid spec back. The LLM writes Danta; you build it.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
+      <h3>Browser-native</h3>
+      <p>Pyodide runs the compiler in WebAssembly — no server, no sign-up. Your specs never leave your machine.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="lp-cta pad" style="text-align:center">
+  <h2 class="lp-heading" style="font-size:clamp(28px,4vw,52px)">Ready to compile your first spec?</h2>
+  <p class="lp-sub" style="margin:0 auto 36px;max-width:50ch">Open the Studio in your browser. No install, no sign-up, no API key. Your spec compiles locally, right now.</p>
+  <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center">
+    <a href="studio.html" class="btn-cta-white">Open Studio →</a>
+    <a href="danta-skill.md" download="danta-skill.md" class="btn-cta-ghost">↓ LLM skill file</a>
   </div>
 </section>
 
@@ -595,7 +520,8 @@ REST API for placing orders.
   <span class="lp-footer-brand">Danta</span>
   <span class="lp-footer-copy">Spec compiler · Open source</span>
   <nav class="lp-footer-links" aria-label="Footer">
-    <a href="#features">Features</a>
+    <a href="#problem">Problem</a>
+    <a href="#outputs">What you get</a>
     <a href="#how">How it works</a>
     <a href="studio.html">Studio</a>
     <a href="danta-skill.md" download="danta-skill.md">↓ Skill file</a>
@@ -615,17 +541,18 @@ REST API for placing orders.
   applyTheme(saved);
   document.querySelectorAll('[data-theme-set]').forEach((b) => b.addEventListener('click', () => applyTheme(b.dataset.themeSet)));
 
-  const heroTabs = document.getElementById('demo-tabs');
-  const heroPanes = document.getElementById('demo-panes');
-  if (heroTabs && heroPanes) {
-    heroTabs.addEventListener('click', (e) => {
+  const tabs = document.getElementById('demo-tabs');
+  const panes = document.getElementById('demo-panes');
+  if (tabs && panes) {
+    tabs.addEventListener('click', (e) => {
       const t = e.target.closest('.demo-tab');
       if (!t) return;
       const idx = +t.dataset.p;
-      heroTabs.querySelectorAll('.demo-tab').forEach((el, i) => el.classList.toggle('on', i === idx));
-      heroPanes.querySelectorAll(':scope > div').forEach((el, i) => el.classList.toggle('on', i === idx));
+      tabs.querySelectorAll('.demo-tab').forEach((el, i) => el.classList.toggle('on', i === idx));
+      panes.querySelectorAll(':scope > div').forEach((el, i) => el.classList.toggle('on', i === idx));
     });
   }
 })();
 </script>
 </body>
+</html>

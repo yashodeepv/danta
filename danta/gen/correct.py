@@ -54,17 +54,21 @@ Expressions
 """
 
 
-def build_correction_prompt(spec: str, errors: list, *, attempt: int = 1, max_attempts: int = 3) -> str:
+def build_correction_prompt(spec: str, errors: list, *, attempt: int = 1, max_attempts: int = 3, user_note: str = '') -> str:
     """Return a prompt that asks the LLM to fix `spec` given `errors`.
 
     `errors` is the list returned by pipeline.build()['errors']:
     each item has .rule, .line, .message (SpecError) or may be a plain str.
+    `user_note` is optional plain-text guidance from the user (e.g. "add a refund flow").
     """
     if not errors:
         return ''
 
     lines = []
     lines.append(f'Attempt {attempt} of {max_attempts}: the spec below has {len(errors)} error(s). Fix them.')
+    if user_note.strip():
+        lines.append('')
+        lines.append(f'The user also asks: "{user_note.strip()}"')
     lines.append('')
     lines.append('Errors:')
     for e in errors:

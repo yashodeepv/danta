@@ -61,9 +61,11 @@ LOADER = r'''<script>
       if (path === '/api/examples') return json(web.api_examples());
       if (path === '/api/build') return json(web.api_build(body.spec || ''));
       if (path === '/api/verify') return json(web.api_verify(body.language || 'python'));
-      if (path === '/api/correction-prompt') return json(web.api_correction_prompt(body.spec || '', body.attempt || 1, body.max_attempts || 3));
+      if (path === '/api/correction-prompt') return json(web.api_correction_prompt(body.spec || '', body.attempt || 1, body.max_attempts || 3, body.user_note || ''));
+      if (path === '/api/design-prompt') return json(web.api_design_prompt(body.spec || ''));
+      if (path === '/api/design-build') return json(web.api_design_build(body.spec || '', body.design_spec || ''));
       if (path === '/api/project') {
-        const data = web.api_project(body.spec || '', body.language || 'python');
+        const data = web.api_project(body.spec || '', body.language || 'python', body.design_spec || '');
         if (data === undefined || data === null) return json('{"fatal": "build the spec without errors first"}', 400);
         const bytes = data.toJs();
         data.destroy();
@@ -124,12 +126,13 @@ def main():
     with open(os.path.join(a.out, 'danta.zip'), 'wb') as f:
         f.write(bundle())
     open(os.path.join(a.out, '.nojekyll'), 'w').close()
-    skill_src = os.path.join(ROOT, 'tools', 'danta-skill.md')
-    skill_dst = os.path.join(a.out, 'danta-skill.md')
-    with open(skill_src) as f:
-        with open(skill_dst, 'w') as g:
-            g.write(f.read())
-    print(f'wrote {a.out}/index.html, {a.out}/studio.html, {a.out}/danta.zip and {a.out}/danta-skill.md')
+    for skill in ('danta-skill.md', 'danta-design-skill.md'):
+        src = os.path.join(ROOT, 'tools', skill)
+        dst = os.path.join(a.out, skill)
+        with open(src) as f:
+            with open(dst, 'w') as g:
+                g.write(f.read())
+    print(f'wrote {a.out}/index.html, {a.out}/studio.html, {a.out}/danta.zip, danta-skill.md, danta-design-skill.md')
 
 
 if __name__ == '__main__':
